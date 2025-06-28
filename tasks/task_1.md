@@ -48,6 +48,14 @@ Ensure that your program outputs all necessary information, including:
 - The Run instance initiation
 - Following the specified formats for IDs and messages
 
+## Useful resources 
+
+### Topics 
+[Introduction to the Assistants API](https://hyperskill.org/learn/step/45396)
+### Docs:
+[Assistants API deep dive](https://platform.openai.com/docs/assistants/deep-dive)
+[Notice on the Responses API](https://platform.openai.com/docs/guides/responses-vs-chat-completions)
+
 ## Examples
 
 ### Example 1: Creating and Executing New Assistant

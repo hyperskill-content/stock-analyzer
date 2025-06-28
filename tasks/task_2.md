@@ -67,6 +67,15 @@ Ensure that your program outputs all necessary information, including:
 - The Run instance
 - Following the specified formats for IDs and messages
 
+## Useful resources 
+
+### Topics 
+[Function calls with chat completions](https://hyperskill.org/learn/step/45477)
+[Function calling with Assistant](https://hyperskill.org/learn/step/46435)
+[Requests: retrieving data](https://hyperskill.org/learn/step/8603)
+(More dictionary methods)[https://hyperskill.org/learn/step/36298]
+
+
 ## Examples
 
 ### Example 1: Retrieving Stock Data with Function Calling
