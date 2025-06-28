@@ -52,7 +52,7 @@ Ensure that your program outputs all necessary information, including:
 
 ### Topics 
 [Introduction to the Assistants API](https://hyperskill.org/learn/step/45396)
-### Docs:
+### Docs
 [Assistants API deep dive](https://platform.openai.com/docs/assistants/deep-dive)
 [Notice on the Responses API](https://platform.openai.com/docs/guides/responses-vs-chat-completions)
 

@@ -22,7 +22,7 @@ Code Interpreter tool will generate a file and you can access the generated file
 
 ### Examples
 
-#### Example 1:
+#### Example 1: Sample Execution Log
 ```
 Matching `stock_analyzer_assistant` assistant found, using the first matching assistant with ID: asst_ixRCiWze9eII7yiW48BGfysf
 Thread created with ID: thread_frQge4YOCEeiW9buF0GsYq43
@@ -66,7 +66,6 @@ Step: step_oUlWH9ZeSNBftODNf6XJajBU
 Step: step_GfRtrneGxBwmKOiUw5pruXXZ
 ```
 
-#### Example 2:   
-The generated image:
+#### Example 2: The Generated Image:  
 ![The generated image](../images/sample_visual.jpg)
 

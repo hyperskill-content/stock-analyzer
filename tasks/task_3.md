@@ -77,7 +77,7 @@ def get_stock_info(stock_symbol):
 
 ## Examples
 
-### Sample Execution Log
+### Example 1: Sample Execution Log
 
 ```
 Matching `stock_analyzer_assistant` assistant found, using the first matching assistant with ID: asst_ixRCiWze9eII7yiW48BGfysf
