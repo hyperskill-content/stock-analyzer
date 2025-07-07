@@ -72,7 +72,7 @@ def get_stock_info(stock_symbol):
 ## Useful resources 
 
 ### Docs 
-[The Code Interpreter tool](https://platform.openai.com/docs/guides/tools-code-interpreter)
+[The Code Interpreter tool](https://platform.openai.com/docs/guides/tools-code-interpreter)    
 
 
 ## Examples
