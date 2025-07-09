@@ -192,9 +192,7 @@ def main():
     thread_id = thread.id
     print(f"Thread created with ID: {thread_id}")
 
-    prompt = """Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months.
-    Analyze the retrieved stock data and identify any trends, calculate ratios, key metrics, etc.
-    """
+    prompt = "Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months."
     client.beta.threads.messages.create(
         thread_id=thread_id,
         role="user",
@@ -273,6 +271,14 @@ def main():
             for content in reversed(message.content):
                 if content.type == "text":
                     print(f"{author}: {content.text.value.replace("**", "")}")
+                elif content.type == "image_file":
+                    file_id = content.image_file.file_id
+                    print(f"{author}: {file_id}")
+                    image_data = client.files.content(file_id=file_id)
+                    image_data_bytes = image_data.read()
+
+                    with open("./stock-image.png", "wb") as file:
+                        file.write(image_data_bytes)
 
         print()
         steps = client.beta.threads.runs.steps.list(
