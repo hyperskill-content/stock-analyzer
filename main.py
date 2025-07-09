@@ -175,6 +175,9 @@ def main():
                     }
                 }
             },
+            {
+                "type": "code_interpreter"
+            }
         ]
         assistant = client.beta.assistants.create(
             name="stock_analyzer_assistant",
@@ -189,7 +192,9 @@ def main():
     thread_id = thread.id
     print(f"Thread created with ID: {thread_id}")
 
-    prompt = "Retrieve and show the latest daily time series data for the stock symbol 'AAPL'."
+    prompt = """Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months.
+    Analyze the retrieved stock data and identify any trends, calculate ratios, key metrics, etc.
+    """
     client.beta.threads.messages.create(
         thread_id=thread_id,
         role="user",
@@ -268,6 +273,14 @@ def main():
             for content in reversed(message.content):
                 if content.type == "text":
                     print(f"{author}: {content.text.value.replace("**", "")}")
+
+        print()
+        steps = client.beta.threads.runs.steps.list(
+            thread_id=thread.id,
+            run_id=run.id
+        )
+        for step in steps:
+            print(f"Step: {step.id}")
 
     else:
         print(run.status)
