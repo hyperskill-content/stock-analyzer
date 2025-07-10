@@ -28,19 +28,20 @@ functions_list = [
                     }
                 },
                 "required": ["function", "symbol"],
+                "additionalProperties": False
             },
+            "strict": True
         },
     }
 ]
 
 
-def get_time_series(function, symbol, api_key=None, interval=None):
-    if api_key is None:
-        api_key = os.environ.get("ALPHA_VANTAGE_API_KEY")
-    params = {"function": function, "symbol": symbol, "apikey": api_key}
-    if interval:
-        params["interval"] = interval
-    return requests.get(f"https://www.alphavantage.co/query", params=params)
+def get_time_series(params: dict) -> str:
+    if params.get("apikey") is None:
+        params["apikey"] = os.environ.get("ALPHAVANTAGE_API_KEY")
+    response = requests.get(f"https://www.alphavantage.co/query", params=params)
+    print(f"Request to Alpha Vantage API (query params: {params}) completed with status: {response.status_code}")
+    return response.text
 
 
 def name_to_function(name):

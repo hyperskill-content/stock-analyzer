@@ -1,8 +1,10 @@
+import json
 import os
 import time
 from pprint import pprint
 
 import openai
+
 from .alpha_vantage import functions_list, name_to_function
 
 
@@ -54,6 +56,19 @@ def execute_thread_run(client, assistant, thread):
         assistant_id=assistant.id
     )
     print(f"Run initiated with ID: {run.id}")
+    run = wait_for_run_completion(client, thread, run)
+    pprint(run.required_action.to_dict(), indent=2, width=90, compact=False)
+    if run.status == "requires_action":
+        function_outputs = call_functions(run)
+        run = client.beta.threads.runs.submit_tool_outputs(
+            thread_id=thread.id,
+            run_id=run.id,
+            tool_outputs=function_outputs
+        )
+        run = wait_for_run_completion(client, thread, run)
+
+
+def wait_for_run_completion(client, thread, run):
     while run.status == "queued" or run.status == "in_progress":
         run = client.beta.threads.runs.retrieve(
             thread_id=thread.id,
@@ -61,7 +76,21 @@ def execute_thread_run(client, assistant, thread):
         )
         print(f"Run status: {run.status}")
         time.sleep(1)
-    pprint(run.required_action, indent=2)
+    return run
+
+
+def call_functions(run):
+    function_outputs = []
+    for tool_call in run.required_action.submit_tool_outputs.tool_calls:
+        print(f"Tool call ID: {tool_call.id}")
+        print(f"\tTool call function: {tool_call.function.name}")
+        print(f"\tTool call function arguments: {tool_call.function.arguments}")
+        action = name_to_function(tool_call.function.name)
+        if action is not None:
+            params = json.loads(tool_call.function.arguments)
+            output = action(params)
+            function_outputs.append({"tool_call_id": tool_call.id, "output": output})
+    return function_outputs
 
 
 def print_assistant_response(client, thread):
