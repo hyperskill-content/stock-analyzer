@@ -1,8 +1,16 @@
 import os
 import time
+from pprint import pprint
 
-import dotenv
 import openai
+from .alpha_vantage import functions_list, name_to_function
+
+
+def create_client():
+    return openai.OpenAI(
+        api_key=os.environ.get("OPENAI_API_KEY"),
+        base_url=os.environ.get("BASE_URL")
+    )
 
 
 def get_assistant(client):
@@ -16,7 +24,8 @@ def get_assistant(client):
     new_assistant = client.beta.assistants.create(
         instructions="You're an experienced stock analyzer assistant tasked with analyzing and visualizing stock market data.",
         name="stock_analyzer_assistant",
-        model="gpt-4o-mini"
+        model="gpt-4o-mini",
+        tools=functions_list
     )
     print(
         f"No matching `stock_analyzer_assistant` assistant found, creating a new assistant with ID: {new_assistant.id}")
@@ -45,13 +54,14 @@ def execute_thread_run(client, assistant, thread):
         assistant_id=assistant.id
     )
     print(f"Run initiated with ID: {run.id}")
-
     while run.status == "queued" or run.status == "in_progress":
-        time.sleep(1)
         run = client.beta.threads.runs.retrieve(
             thread_id=thread.id,
             run_id=run.id
         )
+        print(f"Run status: {run.status}")
+        time.sleep(1)
+    pprint(run.required_action, indent=2)
 
 
 def print_assistant_response(client, thread):
@@ -63,19 +73,20 @@ def print_assistant_response(client, thread):
             print(f"Assistant: {message.content[0].text.value}")
 
 
-def main():
-    dotenv.load_dotenv()
-    client = openai.OpenAI(
-        api_key=os.environ.get("OPENAI_API_KEY"),
-        base_url=os.environ.get("BASE_URL")
-    )
+def delete_assistants(client=None):
+    if client is None:
+        client = create_client()
+    assistants_list = client.beta.assistants.list()
+    for a in assistants_list.data:
+        assistant_deleted = client.beta.assistants.delete(a.id)
+        print(f"Assistant deleted: {assistant_deleted}")
+
+
+def execute_full_conversation():
+    client = create_client()
     assistant = get_assistant(client)
     thread = create_thread(client)
     send_message_to_thread(client, thread,
-                           "Tell me your name and instructions. YOU MUST Provide a DIRECT and SHORT response.")
+                           "Retrieve and show the latest daily time series data for the stock symbol 'AAPL'.")
     execute_thread_run(client, assistant, thread)
     print_assistant_response(client, thread)
-
-
-if __name__ == '__main__':
-    main()
