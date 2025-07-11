@@ -130,7 +130,7 @@ def print_run_steps(client: openai.OpenAI, thread, run):
         run_id=run.id
     )
     for step in run_steps:
-        print(f"- Step {step.id}")
+        print(f"\033[1m- Step {step.id}\033[0m")
         details = step.step_details
         if isinstance(details, ToolCallsStepDetails):
             for tool_call in details.tool_calls:
