@@ -4,6 +4,11 @@ import time
 from pprint import pprint
 
 import openai
+from openai.types.beta.threads.runs import ToolCallsStepDetails
+
+from pygments import highlight
+from pygments.lexers import PythonLexer
+from pygments.formatters import TerminalFormatter
 
 from .alpha_vantage import functions_list, name_to_function
 
@@ -125,8 +130,20 @@ def print_run_steps(client: openai.OpenAI, thread, run):
     )
     for step in run_steps:
         print(f"- Step {step.id}")
-        pprint(step.step_details)
-        print('\n')
+        details = step.step_details
+        if isinstance(details, ToolCallsStepDetails):
+            for tool_call in details.tool_calls:
+                if tool_call.type == "code_interpreter":
+                    print("\tCode interpreter tool call. Src:")
+                    print("```")
+                    print(highlight(tool_call.code_interpreter.input, PythonLexer(), TerminalFormatter()))
+                    print("```")
+                    print("\tCode interpreter tool call output:")
+                    pprint(tool_call.code_interpreter.outputs)
+        else:
+            print("\tDetails:")
+            pprint(details.to_dict(), indent=2, width=90, compact=False)
+
 
 
 def execute_full_conversation():
