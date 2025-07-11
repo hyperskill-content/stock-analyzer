@@ -28,8 +28,6 @@ def get_assistant(client):
                 f"Matching `stock_analyzer_assistant` assistant found, using the first matching assistant with ID: {a.id}")
             return a
 
-    # container = client.containers.create(name="stock_analyzer_assistant_container")
-    # print(f"Creating a new container with ID: {container.id}")
     tools = functions_list + [{"type": "code_interpreter"}]
     new_assistant = client.beta.assistants.create(
         instructions="You're an experienced stock analyzer assistant tasked with analyzing and visualizing stock market data.",
@@ -78,13 +76,16 @@ def execute_thread_run(client, assistant, thread):
 
 
 def wait_for_run_completion(client, thread, run):
+    print("Waiting for run completion...", end="")
+    start = time.perf_counter()
     while run.status == "queued" or run.status == "in_progress":
         run = client.beta.threads.runs.retrieve(
             thread_id=thread.id,
             run_id=run.id
         )
-        print(f"Run status: {run.status}")
         time.sleep(1)
+    end = time.perf_counter()
+    print(f"\rRun completed in {end - start:.2f} seconds  ")
     return run
 
 
