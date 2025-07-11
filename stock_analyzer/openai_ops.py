@@ -24,6 +24,7 @@ def get_assistant(client):
             return a
 
     container = client.containers.create(name="stock_analyzer_assistant_container")
+    print(f"Creating a new container with ID: {container.id}")
     tools = functions_list + [{"type": "code_interpreter", "container_id": container.id}]
     new_assistant = client.beta.assistants.create(
         instructions="You're an experienced stock analyzer assistant tasked with analyzing and visualizing stock market data.",
