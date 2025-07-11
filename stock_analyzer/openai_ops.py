@@ -109,6 +109,8 @@ def delete_assistants(client=None):
     if client is None:
         client = create_client()
     assistants_list = client.beta.assistants.list()
+    if len(assistants_list.data) == 0:
+        print("No assistants found.")
     for a in assistants_list.data:
         assistant_deleted = client.beta.assistants.delete(a.id)
         print(f"Assistant deleted: {assistant_deleted}")
