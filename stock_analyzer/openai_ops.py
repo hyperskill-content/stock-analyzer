@@ -23,11 +23,14 @@ def get_assistant(client):
                 f"Matching `stock_analyzer_assistant` assistant found, using the first matching assistant with ID: {a.id}")
             return a
 
+    container = client.containers.create(name="stock_analyzer_assistant_container")
+    tools = functions_list + [{"type": "code_interpreter", "container_id": container.id}]
     new_assistant = client.beta.assistants.create(
         instructions="You're an experienced stock analyzer assistant tasked with analyzing and visualizing stock market data.",
         name="stock_analyzer_assistant",
         model="gpt-4o-mini",
-        tools=functions_list
+        tools=tools,
+        tool_choice="required"
     )
     print(
         f"No matching `stock_analyzer_assistant` assistant found, creating a new assistant with ID: {new_assistant.id}")
@@ -116,6 +119,6 @@ def execute_full_conversation():
     assistant = get_assistant(client)
     thread = create_thread(client)
     send_message_to_thread(client, thread,
-                           "Retrieve and show the latest daily time series data for the stock symbol 'AAPL'.")
+                           "Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months.")
     execute_thread_run(client, assistant, thread)
     print_assistant_response(client, thread)
