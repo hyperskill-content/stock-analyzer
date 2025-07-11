@@ -28,15 +28,18 @@ functions_list = [
                     }
                 },
                 "required": ["function", "symbol"],
-                "additionalProperties": False
             },
-            "strict": True
         },
     }
 ]
 
 
 def get_time_series(params: dict) -> str:
+    required_params = ["function", "symbol"]
+    if params.get("function") == "TIME_SERIES_INTRADAY":
+        required_params.append("interval")
+    if not all(p in params for p in required_params):
+        raise ValueError("Required parameters for Alpha Vantage API are missing")
     if params.get("apikey") is None:
         params["apikey"] = os.environ.get("ALPHAVANTAGE_API_KEY")
     response = requests.get(f"https://www.alphavantage.co/query", params=params)
