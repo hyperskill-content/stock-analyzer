@@ -40,7 +40,7 @@ def get_assistant(client):
     return new_assistant
 
 
-def create_thread(client):
+def create_thread(client: openai.OpenAI):
     thread = client.beta.threads.create()
     print(f"Thread created with ID: {thread.id}")
     return thread
@@ -103,13 +103,19 @@ def call_functions(run):
     return function_outputs
 
 
-def print_assistant_response(client, thread):
-    messages = client.beta.threads.messages.list(
-        thread_id=thread.id
-    )
+def print_assistant_response(client: openai.OpenAI, thread):
+    messages = client.beta.threads.messages.list(thread_id=thread.id)
     for message in messages.data:
         if message.role == "assistant":
-            print(f"Assistant: {message.content[0].text.value}")
+            for content_block in message.content:
+                if content_block.type == 'text':
+                    print(f"Assistant: {content_block.text.value}")
+                elif content_block.type == 'image_file':
+                    file_id = content_block.image_file.file_id
+                    print(f"Image file_id: {file_id}")
+                    response = client.files.content(file_id)
+                    with open("stock-image.png", "wb") as f:
+                        f.write(response.read())
 
 
 def delete_assistants(client=None):
@@ -123,7 +129,7 @@ def delete_assistants(client=None):
         print(f"Assistant deleted: {assistant_deleted}")
 
 
-def print_run_steps(client: openai.OpenAI, thread, run):
+def print_run_steps(client: openai.OpenAI, thread, run, verbose=False):
     print("\nRun steps:")
     run_steps = client.beta.threads.runs.steps.list(
         thread_id=thread.id,
@@ -131,20 +137,20 @@ def print_run_steps(client: openai.OpenAI, thread, run):
     )
     for step in run_steps:
         print(f"\033[1m- Step {step.id}\033[0m")
-        details = step.step_details
-        if isinstance(details, ToolCallsStepDetails):
-            for tool_call in details.tool_calls:
-                if tool_call.type == "code_interpreter":
-                    print("\tCode interpreter tool call. Src:")
-                    print("```")
-                    print(highlight(tool_call.code_interpreter.input, PythonLexer(), TerminalFormatter()))
-                    print("```")
-                    print("\tCode interpreter tool call output:")
-                    pprint(tool_call.code_interpreter.outputs)
-        else:
-            print("\tDetails:")
-            pprint(details.to_dict(), indent=2, width=90, compact=False)
-
+        if verbose:
+            details = step.step_details
+            if isinstance(details, ToolCallsStepDetails):
+                for tool_call in details.tool_calls:
+                    if tool_call.type == "code_interpreter":
+                        print("\tCode interpreter tool call. Src:")
+                        print("```")
+                        print(highlight(tool_call.code_interpreter.input, PythonLexer(), TerminalFormatter()))
+                        print("```")
+                        print("\tCode interpreter tool call output:")
+                        pprint(tool_call.code_interpreter.outputs)
+            else:
+                print("\tDetails:")
+                pprint(details.to_dict(), indent=2, width=90, compact=False)
 
 
 def execute_full_conversation():
@@ -152,11 +158,11 @@ def execute_full_conversation():
     assistant = get_assistant(client)
     thread = create_thread(client)
     send_message_to_thread(client, thread,
-                           "Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months.")
+                           "Retrieve the monthly time series data for the stock symbol 'AAPL' for April, May and June 2025.")
     execute_thread_run(client, assistant, thread)
 
     send_message_to_thread(client, thread,
-                           "Analyze the retrieved stock data and identify any trends, calculate ratios, key metrics, etc.")
+                           "Make a visualization with the retrieved monthly stock data: a graph for stock prices and another one for stock volume.")
     run = execute_thread_run(client, assistant, thread)
     print_assistant_response(client, thread)
     print_run_steps(client, thread, run)
