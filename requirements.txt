@@ -1,2 +1,4 @@
 openai>=1.14.2
 requests>=2.31.0
+python-dotenv~=1.1.1
+Pygments~=2.19.2
