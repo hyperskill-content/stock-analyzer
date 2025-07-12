@@ -64,7 +64,6 @@ def execute_thread_run(client, assistant, thread):
     print(f"Run initiated with ID: {run.id}")
     run = wait_for_run_completion(client, thread, run)
     if run.status == "requires_action":
-        pprint(run.required_action.to_dict(), indent=2, width=90, compact=False)
         function_outputs = call_functions(run)
         run = client.beta.threads.runs.submit_tool_outputs(
             thread_id=thread.id,
