@@ -5,10 +5,9 @@ from pprint import pprint
 
 import openai
 from openai.types.beta.threads.runs import ToolCallsStepDetails
-
 from pygments import highlight
-from pygments.lexers import PythonLexer
 from pygments.formatters import TerminalFormatter
+from pygments.lexers import PythonLexer
 
 from .alpha_vantage import functions_list, name_to_function
 
@@ -64,7 +63,6 @@ def execute_thread_run(client, assistant, thread):
     print(f"Run initiated with ID: {run.id}")
     run = wait_for_run_completion(client, thread, run)
     if run.status == "requires_action":
-        pprint(run.required_action.to_dict(), indent=2, width=90, compact=False)
         function_outputs = call_functions(run)
         run = client.beta.threads.runs.submit_tool_outputs(
             thread_id=thread.id,
@@ -76,7 +74,7 @@ def execute_thread_run(client, assistant, thread):
 
 
 def wait_for_run_completion(client, thread, run):
-    print("Waiting for run completion...", end="")
+    print(f"Waiting for run {run.id} completion...", end="")
     start = time.perf_counter()
     while run.status == "queued" or run.status == "in_progress":
         run = client.beta.threads.runs.retrieve(
@@ -85,7 +83,7 @@ def wait_for_run_completion(client, thread, run):
         )
         time.sleep(1)
     end = time.perf_counter()
-    print(f"\rRun completed in {end - start:.2f} seconds  ")
+    print(f"\rRun {run.id} completed in {end - start:.2f} seconds  ")
     return run
 
 
@@ -148,9 +146,6 @@ def print_run_steps(client: openai.OpenAI, thread, run, verbose=False):
                         print("```")
                         print("\tCode interpreter tool call output:")
                         pprint(tool_call.code_interpreter.outputs)
-            else:
-                print("\tDetails:")
-                pprint(details.to_dict(), indent=2, width=90, compact=False)
 
 
 def execute_full_conversation():
@@ -165,4 +160,4 @@ def execute_full_conversation():
                            "Make a visualization with the retrieved monthly stock data: a graph for stock prices and another one for stock volume.")
     run = execute_thread_run(client, assistant, thread)
     print_assistant_response(client, thread)
-    print_run_steps(client, thread, run)
+    print_run_steps(client, thread, run, verbose=True)
