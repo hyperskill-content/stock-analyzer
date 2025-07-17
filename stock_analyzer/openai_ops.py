@@ -1,5 +1,4 @@
 import json
-import os
 import time
 from pprint import pprint
 
@@ -11,12 +10,13 @@ from pygments.lexers import PythonLexer
 from pygments.formatters import TerminalFormatter
 
 from .alpha_vantage import functions_list, name_to_function
+from .config import OPENAI_API_KEY, BASE_URL
 
 
 def create_client():
     return openai.OpenAI(
-        api_key=os.environ.get("OPENAI_API_KEY"),
-        base_url=os.environ.get("BASE_URL")
+        api_key=OPENAI_API_KEY,
+        base_url=BASE_URL
     )
 
 
@@ -64,6 +64,7 @@ def execute_thread_run(client, assistant, thread):
     print(f"Run initiated with ID: {run.id}")
     run = wait_for_run_completion(client, thread, run)
     if run.status == "requires_action":
+        pprint(run.required_action.to_dict(), indent=2, width=90, compact=False)
         function_outputs = call_functions(run)
         run = client.beta.threads.runs.submit_tool_outputs(
             thread_id=thread.id,
