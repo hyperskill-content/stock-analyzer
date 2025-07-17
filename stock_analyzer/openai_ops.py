@@ -1,5 +1,4 @@
 import json
-import os
 import time
 from pprint import pprint
 
@@ -10,12 +9,13 @@ from pygments.formatters import TerminalFormatter
 from pygments.lexers import PythonLexer
 
 from .alpha_vantage import functions_list, name_to_function
+from .config import OPENAI_API_KEY, BASE_URL
 
 
 def create_client():
     return openai.OpenAI(
-        api_key=os.environ.get("OPENAI_API_KEY"),
-        base_url=os.environ.get("BASE_URL")
+        api_key=OPENAI_API_KEY,
+        base_url=BASE_URL
     )
 
 
