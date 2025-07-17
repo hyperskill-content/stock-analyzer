@@ -1,6 +1,6 @@
-import os
-
 import requests
+
+from .config import ALPHAVANTAGE_API_KEY
 
 functions_list = [
     {
@@ -41,7 +41,7 @@ def get_time_series(params: dict) -> str:
     if not all(p in params for p in required_params):
         raise ValueError("Required parameters for Alpha Vantage API are missing")
     if params.get("apikey") is None:
-        params["apikey"] = os.environ.get("ALPHAVANTAGE_API_KEY")
+        params["apikey"] = ALPHAVANTAGE_API_KEY
     response = requests.get(f"https://www.alphavantage.co/query", params=params)
     print(f"Request to Alpha Vantage API (query params: {params}) completed with status: {response.status_code}")
     return response.text
