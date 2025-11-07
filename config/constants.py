@@ -7,6 +7,7 @@ for message roles used throughout the application.
 
 from enum import Enum
 
+# Assistant Configuration
 ASSISTANT_MODEL = "gpt-4o-mini"
 ASSISTANT_NAME = "stock_analyzer_assistant"
 ASSISTANT_INSTRUCTION = "You're an experienced stock analyzer assistant tasked with analyzing and visualizing stock market data."
@@ -16,3 +17,24 @@ ASSISTANT_USER_MESSAGE = "Tell me your name and instructions. YOU MUST Provide a
 class MessageRole(Enum):
     USER = "user"
     ASSISTANT = "assistant"
+
+
+# Alpha Vantage API Configuration
+class AlphaVantageFunctions(Enum):
+    TIME_SERIES_INTRADAY = "TIME_SERIES_INTRADAY"
+    TIME_SERIES_DAILY = "TIME_SERIES_DAILY"
+    TIME_SERIES_WEEKLY = "TIME_SERIES_WEEKLY"
+    TIME_SERIES_MONTHLY = "TIME_SERIES_MONTHLY"
+
+
+class AlphaVantageIntervals(Enum):
+    MIN_1 = "1min"
+    MIN_5 = "5min"
+    MIN_15 = "15min"
+    MIN_30 = "30min"
+    MIN_60 = "60min"
+
+
+ALPHA_VANTAGE_BASE_QUERY_URL = "https://www.alphavantage.co/query"
+ALPHA_VANTAGE_DEFAULT_INTERVAL = AlphaVantageIntervals.MIN_5
+ALPHA_VANTAGE_DEFAULT_STOCK_SYMBOL = "AAPL"
