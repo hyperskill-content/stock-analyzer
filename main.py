@@ -23,6 +23,8 @@ def create_client():
 
 tools = [
     {
+        "type": "code_interpreter"
+    },{
         "type": "function",
         "function": {
             "name": "get_stock_data",
@@ -41,10 +43,8 @@ tools = [
     }
 ]
 
-def start_assistant(client, content: str):
-
+def start_assistant_chat(client, messages):
     assistant_name = "stock_analyzer_assistant"
-
     list_assistants = client.beta.assistants.list().data
     assistant_id = None
 
@@ -58,7 +58,7 @@ def start_assistant(client, content: str):
         assistant = client.beta.assistants.create(
             name=assistant_name,
             instructions="You're an experienced stock analyzer assistant tasked with analyzing and visualizing stock market data.",
-            model="gpt-4"
+            model="gpt-4o-mini"
         )
         print(f"No matching `{assistant_name}` assistant found, creating a new assistant with ID: {assistant.id}")
         assistant_id = assistant.id
@@ -79,18 +79,32 @@ def start_assistant(client, content: str):
     thread = client.beta.threads.create()
     print(f"Thread created with ID: {thread.id}")
 
+    for message in messages:
+        send_message(client, thread, message, stock_api_key, stock_api_url, assistant_id)
+
+    messages = client.beta.threads.messages.list(thread_id=thread.id)
+    for message in reversed(messages.data):
+        if message.role == "assistant":
+            print(f"Assistant: {message.content[0].text.value}")
+
+    time.sleep(3)
+    runs = client.beta.threads.runs.list(thread_id=thread.id)
+
+    for run in runs.data:
+        print_steps(client, thread, run)
+
+
+def send_message(client, thread, content, stock_api_key, stock_api_url, assistant_id):
     message = client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
         content=content
     )
-
     start_time = time.time()
     run = client.beta.threads.runs.create(
         thread_id=thread.id,
         assistant_id=assistant_id
     )
-
     print(f"Run initiated with ID: {run.id}")
 
     while True:
@@ -126,13 +140,7 @@ def start_assistant(client, content: str):
                 tool_outputs=tool_outputs
             )
         else:
-            time.sleep(3)
-
-    messages = client.beta.threads.messages.list(thread_id=thread.id)
-    for message in messages.data:
-        if message.role == "assistant":
-            print(f"Assistant: {message.content[0].text.value}")
-
+            time.sleep(5)
 
 def get_stock_data(url, function, symbol, api_key):
     params = {
@@ -154,6 +162,16 @@ def delete_assistant(client, assistant_id):
                 print(f"Assistant deleted: {assistant}")
                 break
 
+def print_steps(client, thread, run):
+    time.sleep(5)
+    run_steps = client.beta.threads.runs.steps.list(
+        thread_id=thread.id,
+        run_id=run.id
+    )
+    for step in run_steps.data:
+        print(f"Step: {step.id}")
+
 if __name__ == "__main__":
     llm_client = create_client()
-    start_assistant(llm_client, "Retrieve and show the latest daily time series data for the stock symbol 'AAPL'")
+    start_assistant_chat(llm_client, ["Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months.",
+                                 "Analyze the retrieved stock data and identify any trends, calculate ratios, key metrics, etc."])
