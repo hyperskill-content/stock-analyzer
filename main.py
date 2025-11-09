@@ -85,7 +85,17 @@ def start_assistant_chat(client, messages):
     messages = client.beta.threads.messages.list(thread_id=thread.id)
     for message in reversed(messages.data):
         if message.role == "assistant":
-            print(f"Assistant: {message.content[0].text.value}")
+            content = message.content[0]
+            if content.type == "image_file":
+                file_id = content.image_file.file_id
+                print(f"assistant: {file_id}")
+                data = client.files.content(file_id=file_id)
+                data_bytes = data.read()
+
+                with open("./stock-image.png", "wb") as file:
+                    file.write(data_bytes)
+            else:
+                print(f"Assistant: {content.text.value}")
 
     time.sleep(3)
     runs = client.beta.threads.runs.list(thread_id=thread.id)
@@ -173,5 +183,5 @@ def print_steps(client, thread, run):
 
 if __name__ == "__main__":
     llm_client = create_client()
-    start_assistant_chat(llm_client, ["Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months.",
-                                 "Analyze the retrieved stock data and identify any trends, calculate ratios, key metrics, etc."])
+    start_assistant_chat(llm_client, ["Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months"])
+
