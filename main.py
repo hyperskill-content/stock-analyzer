@@ -36,7 +36,6 @@ tools = [
     }
 ]
 
-# 1. Integrate Code Interpreter Tool
 stock_analyzer_assistant = helpers.create_assistant(
     name=STOCK_ANALYZER_ASSISTANT_ID,
     instructions=STOCK_ANALYZER_ASSISTANT_INSTRUCTIONS,
@@ -45,6 +44,7 @@ stock_analyzer_assistant = helpers.create_assistant(
 )
 
 def get_stock_time_series(symbol, time_series_type = "TIME_SERIES_DAILY"):
+    """
     url = f"https://www.alphavantage.co/query?function={time_series_type}&symbol={symbol}&apikey=F5W6Z82V2EPL7TEA"
 
     try:
@@ -52,16 +52,48 @@ def get_stock_time_series(symbol, time_series_type = "TIME_SERIES_DAILY"):
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        return {"error": str(e)}
+        print(f"error {str(e)}")
+    """
+    return {
+        "Meta Data": {
+            "1. Information": "Monthly Prices (open, high, low, close) and Volumes",
+            "2. Symbol": "IBM",
+            "3. Last Refreshed": "2024-03-11",
+            "4. Time Zone": "US/Eastern"
+        },
+        "Monthly Time Series": {
+            "2024-03-11": {
+                "1. open": "185.4900",
+                "2. high": "198.7300",
+                "3. low": "185.1800",
+                "4. close": "191.7300",
+                "5. volume": "37816338"
+            },
+            "2024-02-29": {
+                "1. open": "183.6300",
+                "2. high": "188.9500",
+                "3. low": "178.7500",
+                "4. close": "185.0300",
+                "5. volume": "88679550"
+            },
+            "2024-01-31": {
+                "1. open": "162.8300",
+                "2. high": "196.9000",
+                "3. low": "157.8850",
+                "4. close": "183.6600",
+                "5. volume": "128121557"
+            }
+        }
+    }
+
 
 thread = client.beta.threads.create()
 
-# 2. Prompt the Assistant
+# 1. Write Prompt for Visuals
 client.beta.threads.messages.create(
     thread_id=thread.id,
     role="user",
-    content="Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months AND analyze the "
-            "retrieved stock data and identify any trends, calculate ratios, key metrics, etc."
+    content="Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months. Generate a visualization as a downloadable image file."
 )
 
 run = client.beta.threads.runs.create(
@@ -70,7 +102,7 @@ run = client.beta.threads.runs.create(
 )
 
 while True:
-    time.sleep(5)
+    time.sleep(10)
     run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
     if run.status == "completed":
         break
@@ -98,8 +130,21 @@ messages = client.beta.threads.messages.list(thread_id=thread.id)
 for message in messages.data:
     if message.role == "assistant":
         print(f"Assistant response: {message.content[0].text.value}")
+        print(message)
+        # 2. Handle Generated File
+        for content in message.content:
+            if content.type == "image_file":
+                file_id = content.image_file.file_id
+                print(f"assistant: {file_id}")
 
-# 3. Print the Steps
+                # Download the file content
+                file_content = client.files.content(file_id)
+
+                # Write a binary file as an image
+                with open("images/stock-image.png", "wb") as f:
+                    f.write(file_content.read())
+
+time.sleep(3)
 run_steps = client.beta.threads.runs.steps.list(
     thread_id=thread.id,
     run_id=run.id
