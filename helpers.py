@@ -1,10 +1,11 @@
-def create_assistant(name, instructions, client):
+def create_assistant(name, instructions, client, tools=None):
     assistant = find_assistant(name, client.beta.assistants.list())
     if assistant is None:
         assistant = client.beta.assistants.create(
             name=name,
             instructions=instructions,
-            model="gpt-4o-mini"
+            model="gpt-4o-mini",
+            tools=tools
         )
         print(f"No matching `{name}` assistant found, creating a new assistant with ID: {assistant.id}")
     else:
