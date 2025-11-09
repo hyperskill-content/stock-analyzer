@@ -57,7 +57,7 @@ def get_stock_time_series(symbol, time_series_type = "TIME_SERIES_DAILY"):
     return {
         "Meta Data": {
             "1. Information": "Monthly Prices (open, high, low, close) and Volumes",
-            "2. Symbol": "IBM",
+            "2. Symbol": "AAPL",
             "3. Last Refreshed": "2024-03-11",
             "4. Time Zone": "US/Eastern"
         },
@@ -93,7 +93,7 @@ thread = client.beta.threads.create()
 client.beta.threads.messages.create(
     thread_id=thread.id,
     role="user",
-    content="Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months. Generate a visualization as a downloadable image file."
+    content="Retrieve the monthly time series data for the stock symbol 'AAPL' for the latest 3 months. Generate an image visualizing it."
 )
 
 run = client.beta.threads.runs.create(
@@ -110,6 +110,7 @@ while True:
         tool_calls = run.required_action.submit_tool_outputs.tool_calls
         tool_outputs = []
         for tool_call in tool_calls:
+            print(tool_call)
             if tool_call.function.name == "get_stock_time_series":
                 args = json.loads(tool_call.function.arguments)
                 stock_data = get_stock_time_series(
@@ -129,13 +130,14 @@ while True:
 messages = client.beta.threads.messages.list(thread_id=thread.id)
 for message in messages.data:
     if message.role == "assistant":
-        print(f"Assistant response: {message.content[0].text.value}")
         print(message)
         # 2. Handle Generated File
         for content in message.content:
-            if content.type == "image_file":
+            if hasattr(content, "text"):
+                print(f"Assistant response: {content.text.value}")
+            if hasattr(content, "type") and content.type == "image_file":
                 file_id = content.image_file.file_id
-                print(f"assistant: {file_id}")
+                print(f"File Id: {file_id}")
 
                 # Download the file content
                 file_content = client.files.content(file_id)
