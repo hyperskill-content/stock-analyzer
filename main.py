@@ -7,6 +7,7 @@ import json
 
 ### Setup
 api_key = os.getenv("OPENAI_API_KEY")
+alpha_vantage_api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
 client = openai.OpenAI(api_key=api_key, base_url="https://litellm.aks-hs-prod.int.hyperskill.org/openai")
 STOCK_ANALYZER_ASSISTANT_ID = "stock_analyzer_assistant"
 STOCK_ANALYZER_ASSISTANT_INSTRUCTIONS = "You're an experienced stock analyzer assistant tasked with analyzing and visualizing stock market data."
@@ -45,7 +46,7 @@ stock_analyzer_assistant = helpers.create_assistant(
 
 def get_stock_time_series(symbol, time_series_type = "TIME_SERIES_DAILY"):
     """
-    url = f"https://www.alphavantage.co/query?function={time_series_type}&symbol={symbol}&apikey=F5W6Z82V2EPL7TEA"
+    url = f"https://www.alphavantage.co/query?function={time_series_type}&symbol={symbol}&apikey={alpha_vantage_api_key}"
 
     try:
         response = requests.get(url)
