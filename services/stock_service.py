@@ -39,7 +39,7 @@ def get_stock_data(function, symbol, interval=ALPHA_VANTAGE_DEFAULT_INTERVAL):
         response.raise_for_status()
         response_json = response.json()
         print(f"{Fore.GREEN}Called Alpha Vantage Stock with Symbol: {Fore.YELLOW}{symbol}{Style.RESET_ALL}")
-        print(f"{Fore.GREEN}Response Json: {Fore.YELLOW}{response_json}{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}Response Json: {Fore.YELLOW}{str(response_json)[:90]}...{Style.RESET_ALL}")
         return response_json
     except requests.RequestException as e:
         print(f"{Fore.RED}Error: Failed to fetch stock data for {symbol}.{Style.RESET_ALL}")

@@ -35,6 +35,10 @@ class AlphaVantageIntervals(Enum):
     MIN_60 = "60min"
 
 
+class AlphaVantageAvailableFunctions(Enum):
+    GET_STOCK_DATA = "get_stock_data"
+
+
 ALPHA_VANTAGE_BASE_QUERY_URL = "https://www.alphavantage.co/query"
 ALPHA_VANTAGE_DEFAULT_INTERVAL = AlphaVantageIntervals.MIN_5
 ALPHA_VANTAGE_DEFAULT_STOCK_SYMBOL = "AAPL"
