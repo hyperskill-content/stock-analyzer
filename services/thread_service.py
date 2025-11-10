@@ -46,7 +46,6 @@ def add_message(client, thread_id, role, content):
 
     try:
         message = client.beta.threads.messages.create(thread_id=thread_id, role=role_value, content=content)
-        print(f"{Fore.GREEN}Thread message added with ID: {Fore.YELLOW}{message.id}{Style.RESET_ALL}")
         return message
     except Exception as e:
         print(f"{Fore.RED}Error: Failed to add message to thread.{Style.RESET_ALL}")
@@ -77,19 +76,41 @@ def run_thread(client, assistant_id, thread_id, available_functions=None):
         print(f"Details: {e}")
         exit(1)
 
-    # If no functions provided, return immediately
-    if available_functions is None:
-        return run
-
     # Poll the run status and handle function calls
     while True:
         try:
             run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
-            print(f"{Fore.CYAN}Run status: {Fore.YELLOW}{run.status}{Style.RESET_ALL}")
 
             # Check if the run is completed
             if run.status == "completed":
-                print(f"{Fore.GREEN}Run completed successfully!{Style.RESET_ALL}")
+                # Retrieve and display the step list
+                try:
+                    steps = client.beta.threads.runs.steps.list(thread_id=thread_id, run_id=run.id)
+
+                    for step in steps.data:
+                        print(f"\n{Fore.YELLOW}Step ID: {step.id}{Style.RESET_ALL}")
+                        print(f"{Fore.YELLOW}Type: {step.type}{Style.RESET_ALL}")
+
+                        # Print Code Interpreter details if available
+                        if step.type == "tool_calls" and step.step_details.tool_calls:
+                            for tool_call in step.step_details.tool_calls:
+                                if tool_call.type == "code_interpreter":
+                                    print(f"{Fore.CYAN}Code Interpreter Input:{Style.RESET_ALL}")
+                                    print(f"{Fore.WHITE}{tool_call.code_interpreter.input}{Style.RESET_ALL}")
+
+                                    if tool_call.code_interpreter.outputs:
+                                        print(f"{Fore.CYAN}Code Interpreter Outputs:{Style.RESET_ALL}")
+                                        for output in tool_call.code_interpreter.outputs:
+                                            if output.type == "logs":
+                                                print(f"{Fore.GREEN}Logs: {output.logs}{Style.RESET_ALL}")
+                                            elif output.type == "image":
+                                                print(
+                                                    f"{Fore.GREEN}Image File ID: {output.image.file_id}{Style.RESET_ALL}")
+
+                except Exception as e:
+                    print(f"{Fore.YELLOW}Warning: Could not retrieve run steps{Style.RESET_ALL}")
+                    print(f"Details: {e}")
+
                 break
 
             # Check if the run failed
@@ -99,8 +120,6 @@ def run_thread(client, assistant_id, thread_id, available_functions=None):
 
             # Check if the run requires action (function calling)
             elif run.status == "requires_action":
-                print(f"{Fore.MAGENTA}Run requires action - processing tool calls...{Style.RESET_ALL}")
-
                 # Extract tool calls
                 tool_calls = run.required_action.submit_tool_outputs.tool_calls
                 tool_outputs = []
@@ -108,10 +127,6 @@ def run_thread(client, assistant_id, thread_id, available_functions=None):
                 for tool_call in tool_calls:
                     function_name = tool_call.function.name
                     function_args = json.loads(tool_call.function.arguments)
-
-                    print(f"{Fore.CYAN}Tool call ID: {Fore.YELLOW}{tool_call.id}{Style.RESET_ALL}")
-                    print(f"{Fore.CYAN}Calling function: {Fore.YELLOW}{function_name}{Style.RESET_ALL}")
-                    print(f"{Fore.CYAN}Arguments: {Fore.YELLOW}{function_args}{Style.RESET_ALL}")
 
                     # Execute the function
                     if function_name in available_functions:
@@ -122,7 +137,6 @@ def run_thread(client, assistant_id, thread_id, available_functions=None):
                             "tool_call_id": tool_call.id,
                             "output": json.dumps(function_response)
                         })
-                        print(f"{Fore.GREEN}Function executed successfully{Style.RESET_ALL}")
                     else:
                         print(f"{Fore.RED}Error: Function {function_name} not found{Style.RESET_ALL}")
 
@@ -133,14 +147,13 @@ def run_thread(client, assistant_id, thread_id, available_functions=None):
                         run_id=run.id,
                         tool_outputs=tool_outputs
                     )
-                    print(f"{Fore.GREEN}Tool outputs submitted{Style.RESET_ALL}")
                 except Exception as e:
                     print(f"{Fore.RED}Error: Failed to submit tool outputs.{Style.RESET_ALL}")
                     print(f"Details: {e}")
                     break
 
             # Wait before polling again
-            time.sleep(3)
+            time.sleep(20)
 
         except Exception as e:
             print(f"{Fore.RED}Error: Failed to retrieve run status.{Style.RESET_ALL}")

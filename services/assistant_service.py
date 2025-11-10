@@ -9,7 +9,7 @@ from colorama import Fore, Style
 from config.constants import ASSISTANT_NAME, ASSISTANT_INSTRUCTION, ASSISTANT_MODEL, AlphaVantageAvailableFunctions
 
 # Tools
-get_stock_data_tools = {
+get_stock_data_tool = {
     "type": "function",
     "function": {
         "name": AlphaVantageAvailableFunctions.GET_STOCK_DATA.value,
@@ -42,6 +42,10 @@ get_stock_data_tools = {
     }
 }
 
+get_code_interpreter_tool = {
+    "type": "code_interpreter"
+}
+
 
 # Function
 def get_assistant(client):
@@ -62,8 +66,7 @@ def get_assistant(client):
         print(f"{Fore.GREEN}Found existing assistant with ID: {Fore.YELLOW}{matching_assistant.id}{Style.RESET_ALL}")
         try:
             updated_assistant = client.beta.assistants.update(assistant_id=matching_assistant.id,
-                                                              tools=[get_stock_data_tools])
-            print(f"{Fore.CYAN}Updated assistant tools{Style.RESET_ALL}")
+                                                              tools=[get_code_interpreter_tool, get_stock_data_tool])
             return updated_assistant
         except Exception as e:
             print(f"{Fore.YELLOW}Warning: Could not update assistant tools{Style.RESET_ALL}")
@@ -75,7 +78,7 @@ def get_assistant(client):
                 name=ASSISTANT_NAME,
                 instructions=ASSISTANT_INSTRUCTION,
                 model=ASSISTANT_MODEL,
-                tools=[get_stock_data_tools]
+                tools=[get_code_interpreter_tool, get_stock_data_tool]
             )
             print(f"{Fore.GREEN}Created new assistant with ID: {Fore.YELLOW}{new_assistant.id}{Style.RESET_ALL}")
             return new_assistant
