@@ -2,31 +2,26 @@
 OpenAI client initialization service.
 
 Handles the creation and configuration of the OpenAI client instance
-with credentials from environment variables.
+with credentials from a centralized configuration.
 """
 
 # Imports
 from colorama import Fore, Style
-from dotenv import load_dotenv
+from config.settings import settings
 from openai import OpenAI
-import os
 
 
 # Functions
 def get_client():
     """
     Initialize and return the OpenAI client.
-    Uses OPENAI_API_KEY and BASE_URL from environment variables.
+    Uses configuration from the settings module.
     :return: Configured OpenAI client instance
     """
-    load_dotenv()
-    openai_api_key = os.environ.get('OPENAI_API_KEY')
-    openai_base_url = os.environ.get('BASE_URL')
-
     try:
         client = OpenAI(
-            api_key=openai_api_key,
-            base_url=openai_base_url
+            api_key=settings.openai_api_key,
+            base_url=settings.openai_base_url
         )
         print(f"{Fore.GREEN}Created OpenAI client{Style.RESET_ALL}")
         return client

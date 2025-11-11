@@ -7,11 +7,10 @@ for various time series intervals (intraday, daily, weekly, monthly).
 
 # Imports
 from colorama import Fore, Style
-import os
-import requests
+from config.settings import settings
 from config.constants import ALPHA_VANTAGE_BASE_QUERY_URL, ALPHA_VANTAGE_DEFAULT_INTERVAL, AlphaVantageFunctions, \
     AlphaVantageIntervals
-from dotenv import load_dotenv
+import requests
 
 
 # Functions
@@ -23,8 +22,7 @@ def get_stock_data(function, symbol, interval=ALPHA_VANTAGE_DEFAULT_INTERVAL):
     :param interval: Time interval for intraday data (e.g., '5min', '15min', '60min')
     :return: Stock data JSON response
     """
-    load_dotenv()
-    alphavantage_api_key = os.environ.get('ALPHAVANTAGE_API_KEY')
+    alphavantage_api_key = settings.alpha_vantage_api_key
 
     # Extract .value if enums, otherwise use it directly
     function_value = function.value if hasattr(function, 'value') else function
