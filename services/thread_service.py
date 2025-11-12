@@ -5,7 +5,7 @@ Handles thread creation, message operations, and run execution
 for conversations with the Stock Analyzer assistant.
 """
 from colorama import Fore, Style
-from config.constants import MessageRole
+from config.constants import MessageRole, THREAD_RUN_POLL_INTERVAL_SECONDS, THREAD_RUN_TIMEOUT_SECONDS
 from openai import OpenAI
 from typing import Union, Optional, Dict, Callable
 import json
@@ -81,7 +81,14 @@ def run_thread(client: OpenAI, assistant_id: str, thread_id: str,
         exit(1)
 
     # Poll the run status and handle function calls
+    start_time = time.time()
     while True:
+        # Check for timeout
+        elapsed_time = time.time() - start_time
+        if elapsed_time > THREAD_RUN_TIMEOUT_SECONDS:
+            print(f"{Fore.RED}Error: Run exceeded timeout of {THREAD_RUN_TIMEOUT_SECONDS} seconds{Style.RESET_ALL}")
+            break
+
         try:
             run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run.id)
 
@@ -157,7 +164,7 @@ def run_thread(client: OpenAI, assistant_id: str, thread_id: str,
                     break
 
             # Wait before polling again
-            time.sleep(20)
+            time.sleep(THREAD_RUN_POLL_INTERVAL_SECONDS)
 
         except Exception as e:
             print(f"{Fore.RED}Error: Failed to retrieve run status.{Style.RESET_ALL}")

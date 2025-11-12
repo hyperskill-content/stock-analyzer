@@ -42,3 +42,7 @@ class AlphaVantageAvailableFunctions(Enum):
 ALPHA_VANTAGE_BASE_QUERY_URL = "https://www.alphavantage.co/query"
 ALPHA_VANTAGE_DEFAULT_INTERVAL = AlphaVantageIntervals.MIN_5
 ALPHA_VANTAGE_DEFAULT_STOCK_SYMBOL = "AAPL"
+
+# Thread Run Configuration
+THREAD_RUN_TIMEOUT_SECONDS = 300  # 5 minutes max for run completion
+THREAD_RUN_POLL_INTERVAL_SECONDS = 20  # Check status every 20 seconds
