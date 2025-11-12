@@ -7,11 +7,14 @@ stock data retrieval, analysis operations, response handling....
 # Imports
 from colorama import Fore, Style
 from config.constants import MessageRole
+from openai import OpenAI
 from services.thread_service import add_message, run_thread
+from typing import Dict, Callable, Tuple, Optional
 
 
 # Functions
-def retrieve_stock_data(client, assistant, thread, available_functions):
+def retrieve_stock_data(client: OpenAI, assistant: object, thread: object,
+                        available_functions: Dict[str, Callable]) -> object:
     """
     Retrieve stock market data for a specified symbol.
     Sends a user prompt to the assistant requesting monthly time series data
@@ -34,7 +37,8 @@ def retrieve_stock_data(client, assistant, thread, available_functions):
     return run
 
 
-def analyze_stock_data(client, assistant, thread, available_functions):
+def analyze_stock_data(client: OpenAI, assistant: object, thread: object,
+                       available_functions: Dict[str, Callable]) -> None:
     """
     Analyze retrieved stock data and display insights.
     Sends a user prompt to the assistant requesting analysis of the previously
@@ -66,7 +70,8 @@ def analyze_stock_data(client, assistant, thread, available_functions):
             print()
 
 
-def visualize_stock_data(client, assistant, thread, available_functions):
+def visualize_stock_data(client: OpenAI, assistant: object, thread: object,
+                         available_functions: Dict[str, Callable]) -> None:
     """
     Visualize stock market data with charts.
     Sends a prompt to the assistant to create visual representations of stock data.
@@ -95,7 +100,7 @@ def visualize_stock_data(client, assistant, thread, available_functions):
             try:
                 file_content = client.files.content(image_file_id)
                 image_data = file_content.read()
-                with open("stock-image.png", "wb") as file:
+                with open("images/stock-image.png", "wb") as file:
                     file.write(image_data)
                 print(f"{Fore.GREEN}Image saved as stock-image.png{Style.RESET_ALL}")
             except Exception as e:
@@ -103,7 +108,7 @@ def visualize_stock_data(client, assistant, thread, available_functions):
             print()
 
 
-def get_assistant_response(client, thread_id):
+def get_assistant_response(client: OpenAI, thread_id: str) -> Tuple[Optional[str], Optional[str]]:
     """
     Get the latest assistant message from a thread.
     Retrieves all messages from the specified thread, filters for assistant

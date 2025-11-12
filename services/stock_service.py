@@ -10,11 +10,13 @@ from colorama import Fore, Style
 from config.settings import settings
 from config.constants import ALPHA_VANTAGE_BASE_QUERY_URL, ALPHA_VANTAGE_DEFAULT_INTERVAL, AlphaVantageFunctions, \
     AlphaVantageIntervals
+from typing import Union, Dict, Any
 import requests
 
 
 # Functions
-def get_stock_data(function, symbol, interval=ALPHA_VANTAGE_DEFAULT_INTERVAL):
+def get_stock_data(function: Union[AlphaVantageFunctions, str], symbol: str,
+                   interval: Union[AlphaVantageIntervals, str] = ALPHA_VANTAGE_DEFAULT_INTERVAL) -> Dict[str, Any]:
     """
     Fetch stock data from Alpha Vantage API
     :param function: One of the time series functions

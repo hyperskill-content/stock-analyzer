@@ -12,7 +12,7 @@ from openai import OpenAI
 
 
 # Functions
-def get_client():
+def get_client() -> OpenAI:
     """
     Initialize and return the OpenAI client.
     Uses configuration from the settings module.

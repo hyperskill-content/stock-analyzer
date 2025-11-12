@@ -7,6 +7,7 @@ Handles creation and retrieval of OpenAI assistants for stock analysis.
 # Imports
 from colorama import Fore, Style
 from config.constants import ASSISTANT_NAME, ASSISTANT_INSTRUCTION, ASSISTANT_MODEL, AlphaVantageAvailableFunctions
+from openai import OpenAI
 
 # Tools
 get_stock_data_tool = {
@@ -48,7 +49,7 @@ get_code_interpreter_tool = {
 
 
 # Function
-def get_assistant(client):
+def get_assistant(client: OpenAI) -> object:
     """
     Find an existing Stock Analyzer assistant or create a new one.
     :param client: The OpenAI client instance

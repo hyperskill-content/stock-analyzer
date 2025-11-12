@@ -5,12 +5,15 @@ Handles thread creation, message operations, and run execution
 for conversations with the Stock Analyzer assistant.
 """
 from colorama import Fore, Style
+from config.constants import MessageRole
+from openai import OpenAI
+from typing import Union, Optional, Dict, Callable
 import json
 import time
 
 
 # Functions
-def get_thread(openai_client):
+def get_thread(openai_client: OpenAI) -> object:
     """
     Create a new thread for conversation with the Assistant.
     A thread represents a conversation session where messages are exchanged
@@ -29,7 +32,7 @@ def get_thread(openai_client):
         exit(1)
 
 
-def add_message(client, thread_id, role, content):
+def add_message(client: OpenAI, thread_id: str, role: Union[MessageRole, str], content: str) -> object:
     """
     Add a message to a thread.
     Creates and adds a new message to an existing thread. The message can be
@@ -53,7 +56,8 @@ def add_message(client, thread_id, role, content):
         exit(1)
 
 
-def run_thread(client, assistant_id, thread_id, available_functions=None):
+def run_thread(client: OpenAI, assistant_id: str, thread_id: str,
+               available_functions: Optional[Dict[str, Callable]] = None) -> object:
     """
     Execute a run instance to process messages in a thread.
     Links the thread with the assistant and triggers processing of the user's message.
