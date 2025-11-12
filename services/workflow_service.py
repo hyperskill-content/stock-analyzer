@@ -55,13 +55,51 @@ def analyze_stock_data(client, assistant, thread, available_functions):
 
     # Retrieve and display the assistant's response
     if run.status == "completed":
-        response_text = get_assistant_response(client, thread.id)
+        response_text, image_file_id = get_assistant_response(client, thread.id)
         if response_text:
             print()
-            print("=" * 60)
             print(f"{Fore.GREEN}Assistant Response:{Style.RESET_ALL}")
-            print("=" * 60)
             print(f"{Fore.WHITE}{response_text}{Style.RESET_ALL}")
+            print()
+        if image_file_id:
+            print(f"{Fore.GREEN}Assistant Response Image file ID: {image_file_id}{Style.RESET_ALL}")
+            print()
+
+
+def visualize_stock_data(client, assistant, thread, available_functions):
+    """
+    Visualize stock market data with charts.
+    Sends a prompt to the assistant to create visual representations of stock data.
+    Downloads and saves the generated chart as stock-image.png.
+    """
+    user_prompt_visualization = "Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 12 months."
+    add_message(client, thread.id, MessageRole.USER, user_prompt_visualization)
+    print()
+    print(f"{Fore.CYAN}User message: {Fore.WHITE}{user_prompt_visualization}{Style.RESET_ALL}")
+    print()
+    run = run_thread(client, assistant.id, thread.id, available_functions)
+
+    # Retrieve and display the assistant's response
+    if run.status == "completed":
+        response_text, image_file_id = get_assistant_response(client, thread.id)
+        if response_text:
+            print()
+            print(f"{Fore.GREEN}Assistant Response:{Style.RESET_ALL}")
+            print(f"{Fore.WHITE}{response_text}{Style.RESET_ALL}")
+            print()
+        if image_file_id:
+            print(f"{Fore.GREEN}Assistant Response Image file ID: {image_file_id}{Style.RESET_ALL}")
+            print()
+
+            # Download and save the image
+            try:
+                file_content = client.files.content(image_file_id)
+                image_data = file_content.read()
+                with open("stock-image.png", "wb") as file:
+                    file.write(image_data)
+                print(f"{Fore.GREEN}Image saved as stock-image.png{Style.RESET_ALL}")
+            except Exception as e:
+                print(f"{Fore.RED}Error saving image: {e}{Style.RESET_ALL}")
             print()
 
 
@@ -69,18 +107,25 @@ def get_assistant_response(client, thread_id):
     """
     Get the latest assistant message from a thread.
     Retrieves all messages from the specified thread, filters for assistant
-    messages, and returns the most recent one. Also adds the response back
-    to the thread for conversation continuity.
+    messages, and returns the most recent one.
     :param client: The OpenAI client instance
     :param thread_id: The thread's unique identifier
-    :return: The response text from the assistant, or None if no messages found
+    :return: The response text from the assistant, or None if no messages are found
     """
     messages = client.beta.threads.messages.list(thread_id=thread_id)
     assistant_messages = [msg for msg in messages.data if msg.role == "assistant"]
 
     if assistant_messages:
         latest_message = assistant_messages[0]
-        response_text = latest_message.content[0].text.value
-        add_message(client, thread_id, MessageRole.ASSISTANT, response_text)
-        return response_text
-    return None
+        response_text = ""
+        image_file_id = None
+
+        # Loop through ALL content blocks
+        for content_block in latest_message.content:
+            if content_block.type == "text":
+                response_text += content_block.text.value
+            elif content_block.type == "image_file":
+                image_file_id = content_block.image_file.file_id
+
+        return response_text, image_file_id
+    return None, None

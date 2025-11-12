@@ -12,7 +12,7 @@ from services.assistant_service import get_assistant
 from services.openai_client import get_client
 from services.thread_service import get_thread
 from services.stock_service import get_stock_data
-from services.workflow_service import analyze_stock_data, retrieve_stock_data
+from services.workflow_service import analyze_stock_data, retrieve_stock_data, visualize_stock_data
 from main_helpers import main_initialization, main_end
 
 # Init
@@ -34,9 +34,10 @@ def main():
         AlphaVantageAvailableFunctions.GET_STOCK_DATA.value: get_stock_data
     }
 
-    # Retrieve and analysis stock data
+    # Retrieve, analysis and visualize stock data
     retrieve_stock_data(client, assistant, thread, available_functions)
     analyze_stock_data(client, assistant, thread, available_functions)
+    visualize_stock_data(client, assistant, thread, available_functions)
 
     # Finish message
     main_end()
