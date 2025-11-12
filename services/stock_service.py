@@ -31,11 +31,16 @@ def get_stock_data(function: Union[AlphaVantageFunctions, str], symbol: str,
     interval_value = interval.value if hasattr(interval, 'value') else interval
 
     try:
-        query_url = f"{ALPHA_VANTAGE_BASE_QUERY_URL}?function={function_value}&symbol={symbol}&apikey={alphavantage_api_key}"
-        if function_value == AlphaVantageFunctions.TIME_SERIES_INTRADAY.value:
-            query_url += f"&interval={interval_value}"
+        params = {
+            "function": function_value,
+            "symbol": symbol,
+            "apikey": alphavantage_api_key
+        }
 
-        response = requests.get(query_url)
+        if function_value == AlphaVantageFunctions.TIME_SERIES_INTRADAY.value:
+            params["interval"] = interval_value
+
+        response = requests.get(ALPHA_VANTAGE_BASE_QUERY_URL, params=params)
         response.raise_for_status()
         response_json = response.json()
         print(f"{Fore.GREEN}Called Alpha Vantage Stock with Symbol: {Fore.YELLOW}{symbol}{Style.RESET_ALL}")
