@@ -15,9 +15,9 @@ def main_initialization():
     Uses color formatting to enhance visibility in the terminal output.
     """
     print()
-    print("=" * 40)
-    print(f"{Fore.CYAN}      TASK 3: Data Analysis{Style.RESET_ALL}")
-    print("=" * 40)
+    print("=" * 60)
+    print(f"{Fore.CYAN}🚀  TASK 3: Data Analysis{Style.RESET_ALL}")
+    print("=" * 60)
     print()
 
 
@@ -28,7 +28,40 @@ def main_end():
     Uses color formatting to enhance visibility in the terminal output.
     """
     print()
-    print("=" * 40)
-    print(f"{Fore.CYAN}      TASK 3 Complete{Style.RESET_ALL}")
-    print("=" * 40)
+    print("=" * 60)
+    print(f"{Fore.CYAN}🎉  TASK 3 Complete{Style.RESET_ALL}")
+    print("=" * 60)
+    print()
+
+
+def retrieve_stock_header():
+    """
+    """
+    print()
+    print()
+    print(f"{Fore.MAGENTA}{'=' * 40}{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}📊  STEP 1: RETRIEVE STOCK DATA{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}{'=' * 40}{Style.RESET_ALL}")
+    print()
+
+
+def analyze_stock_header():
+    """
+    """
+    print()
+    print()
+    print(f"{Fore.MAGENTA}{'=' * 40}{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}🔍  STEP 2: ANALYZE STOCK DATA{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}{'=' * 40}{Style.RESET_ALL}")
+    print()
+
+
+def visualize_stock_header():
+    """
+    """
+    print()
+    print()
+    print(f"{Fore.MAGENTA}{'=' * 40}{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}📈  STEP 3: VISUALIZE STOCK DATA{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}{'=' * 40}{Style.RESET_ALL}")
     print()

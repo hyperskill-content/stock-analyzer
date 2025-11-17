@@ -13,7 +13,8 @@ from services.openai_client import get_client
 from services.thread_service import get_thread
 from services.stock_service import get_stock_data
 from services.workflow_service import analyze_stock_data, retrieve_stock_data, visualize_stock_data
-from main_helpers import main_initialization, main_end
+from main_helpers import main_initialization, main_end, retrieve_stock_header, analyze_stock_header, \
+    visualize_stock_header
 
 # Init
 init(autoreset=True)
@@ -35,8 +36,13 @@ def main():
     }
 
     # Retrieve, analysis and visualize stock data
+    retrieve_stock_header()
     retrieve_stock_data(client, assistant, thread, available_functions)
+
+    analyze_stock_header()
     analyze_stock_data(client, assistant, thread, available_functions)
+
+    visualize_stock_header()
     visualize_stock_data(client, assistant, thread, available_functions)
 
     # Finish message
