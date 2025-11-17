@@ -77,7 +77,7 @@ def visualize_stock_data(client: OpenAI, assistant: object, thread: object,
     Sends a prompt to the assistant to create visual representations of stock data.
     Downloads and saves the generated chart as stock-image.png.
     """
-    user_prompt_visualization = "Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 12 months."
+    user_prompt_visualization = "Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 12 months. Show Open, High, Low, Close prices and Volume in separate subplots with proper formatting."
     add_message(client, thread.id, MessageRole.USER, user_prompt_visualization)
     print()
     print(f"{Fore.CYAN}User message: {Fore.WHITE}{user_prompt_visualization}{Style.RESET_ALL}")
