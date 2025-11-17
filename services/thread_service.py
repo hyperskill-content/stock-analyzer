@@ -142,12 +142,20 @@ def run_thread(client: OpenAI, assistant_id: str, thread_id: str,
                     # Execute the function
                     if function_name in available_functions:
                         function_to_call = available_functions[function_name]
-                        function_response = function_to_call(**function_args)
+                        try:
+                            function_response = function_to_call(**function_args)
 
-                        tool_outputs.append({
-                            "tool_call_id": tool_call.id,
-                            "output": json.dumps(function_response)
-                        })
+                            tool_outputs.append({
+                                "tool_call_id": tool_call.id,
+                                "output": json.dumps(function_response)
+                            })
+                        except Exception as e:
+                            print(f"{Fore.RED}Error calling function {function_name}: {e}{Style.RESET_ALL}")
+                            # Return error as tool output
+                            tool_outputs.append({
+                                "tool_call_id": tool_call.id,
+                                "output": json.dumps({"error": str(e)})
+                            })
                     else:
                         print(f"{Fore.RED}Error: Function {function_name} not found{Style.RESET_ALL}")
 

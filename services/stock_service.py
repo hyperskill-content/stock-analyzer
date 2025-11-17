@@ -49,4 +49,4 @@ def get_stock_data(function: Union[AlphaVantageFunctions, str], symbol: str,
     except requests.RequestException as e:
         print(f"{Fore.RED}Error: Failed to fetch stock data for {symbol}.{Style.RESET_ALL}")
         print(f"Details: {e}")
-        return {}
+        raise
