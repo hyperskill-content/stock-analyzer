@@ -11,6 +11,11 @@ Your primary task is initializing and configuring the Stock Analyzer Assistant u
 > ⚠️ **Important Security Note:**
 > This project involves the use of private keys (OpenAI API keys) and .env files. Please ensure you **DO NOT** expose your keys by hardcoding them directly into the solution. Instead, always reference them securely from your .env file. Additionally, do not include your .env file in your project submission. Double-check your code for any accidental key exposure before submission. If sharing code snippets, mask sensitive values. You can use this package to load a .env file.
 
+Before starting, create the .env file from a template:
+```bash
+cp .env.template .env
+```
+
 **LiteLLM Proxy Configuration:**
 In case you are using the LiteLLM proxy, set the `base_url` parameter of the OpenAI client to `https://litellm.aks-hs-prod.int.hyperskill.org/openai`
 
@@ -55,6 +60,8 @@ Ensure that your program outputs all necessary information, including:
 ### Docs
 [Assistants API deep dive](https://platform.openai.com/docs/assistants/deep-dive)    
 [Notice on the Responses API](https://platform.openai.com/docs/guides/responses-vs-chat-completions)    
+
+As of late 2025, the Responses API doesn't have full feature parity. The main blocker is that you can't programmatically create or manage assistants (called "Prompts" in the new API) — they can only be created through the Dashboard UI. The Responses API also has limited conversation history management compared to the thread-based system we rely on, and lacks equivalents for tool resources configuration. We'll migrate once the necessary features are available, well before the August 2026 deadline.   
 
 ## Examples
 
