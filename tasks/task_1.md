@@ -9,7 +9,7 @@ In the project's first stage, you'll create the Stock Analyzer Assistant by givi
 Your primary task is initializing and configuring the Stock Analyzer Assistant using the OpenAI API. This involves the creation of an assistant instance, setting up a communication thread, and initiating a run to execute the instructions from a simple prompt.
 
 > ⚠️ **Important Security Note:**
-> This project involves the use of private keys (OpenAI API keys) and .env files. Please ensure you **DO NOT** expose your keys by hardcoding them directly into the solution. Instead, always reference them securely from your .env file. Additionally, do not include your .env file in your project submission. Double-check your code for any accidental key exposure before submission. If sharing code snippets, mask sensitive values. You can use this package to load a .env file.
+> This project involves the use of private keys (OpenAI API keys) and .env files. Please ensure you **DO NOT** expose your keys by hardcoding them directly into the solution. Instead, always reference them securely from your `.env` file. Additionally, do not include your `.env` file in your project submission. Double-check your code for any accidental key exposure before submission. If sharing code snippets, mask sensitive values. You can use the [python-dotenv package](https://pypi.org/project/python-dotenv/) to load a .env file.
 
 Before starting, create the .env file from a template:
 ```bash

@@ -12,8 +12,7 @@ Here are the main starter directories and files in this repo:
 │   ├── task_1.md
 │   ├── task_2.md
 │   ├── task_3.md
-│   ├── task_4.md
-│   └── task_5.md
+│   └── task_4.md
 ├── images/
 ├── README.md
 ├── .gitignore
