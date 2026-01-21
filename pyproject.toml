@@ -1,0 +1,22 @@
+[project]
+name = "stock-analyzer"
+version = "0.1.0"
+description = "Stock Analyzer for JetBrains AI bootcamp"
+authors = [
+    {name = "jedd.cox"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "openai (>=2.15.0,<3.0.0)"
+]
+
+[dependency-groups]
+dev = [
+    "dotenv (>=0.9.9,<0.10.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
