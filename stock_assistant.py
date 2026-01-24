@@ -9,7 +9,7 @@ import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 load_dotenv()
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-ASSISTANT_NAME = "stock_analyzer_assistant1"
+ASSISTANT_NAME = "stock_analyzer_assistant2"
 API_KEY_ALPHAVANTAGE = os.environ.get("ALPHAVANTAGE_API_KEY")
 URL_ALPHAVANTAGE = "https://www.alphavantage.co/query"
 
@@ -22,6 +22,7 @@ def validate_assistant():
 
 def create_assistant():
     tools = [
+        {"type": "code_interpreter"},
         {
             "type": "function",
             "function": {
@@ -172,8 +173,14 @@ def get_response(thread_id, run_id):
             return "No assistant response found."
     return None
 
+def view_steps(thread_id, run_id):
+    steps = client.beta.threads.runs.steps.list(thread_id=thread_id, run_id=run_id)
+    for step in steps.data:
+        print(f"Step ID: {step.id}")
+
+
 def main():
-    prompt = "Retrieve and show the latest day series data for the company IBM."
+    prompt = "Retrieve and analyze latest 3 months data for the company IBM, consider identify any trends, calculate ratios, key metrics, etc. and show as a text summary."
     start_time = time.perf_counter()
     assistant_id = validate_assistant()
 
@@ -195,6 +202,7 @@ def main():
     end_time = time.perf_counter()
     print(f"Done! Response received in {end_time - start_time:.2f} seconds")
     print(f"Assistant Response: {assistant_response}")
+    view_steps(thread_id, run_id)
 
 if __name__ == "__main__":
     main()
