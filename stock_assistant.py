@@ -102,7 +102,7 @@ def get_company_symbol(keyword):
     if "bestMatches" in data and len(data["bestMatches"]) > 0:
         return data["bestMatches"][0]["1. symbol"]
     else:
-        return "Symbol not found."
+        return "IBM"  # Default to IBM if no match found
 
 def get_frequency_function(keyword):
     frequency_map = {
@@ -121,7 +121,43 @@ def get_stock_data(company_symbol, frequency_function):
     }
     response = requests.get(URL_ALPHAVANTAGE, params=params)
     data = response.json()
+    if 'Information' in data:
+        data = get_stock_info(company_symbol)
     return data
+
+def get_stock_info(stock_symbol):
+    mock_data = {
+        "Meta Data": {
+            "1. Information": "Monthly Prices (open, high, low, close) and Volumes",
+            "2. Symbol": "IBM",
+            "3. Last Refreshed": "2024-03-11",
+            "4. Time Zone": "US/Eastern"
+        },
+        "Monthly Time Series": {
+            "2024-03-11": {
+                "1. open": "185.4900",
+                "2. high": "198.7300",
+                "3. low": "185.1800",
+                "4. close": "191.7300",
+                "5. volume": "37816338"
+            },
+            "2024-02-29": {
+                "1. open": "183.6300",
+                "2. high": "188.9500",
+                "3. low": "178.7500",
+                "4. close": "185.0300",
+                "5. volume": "88679550"
+            },
+            "2024-01-31": {
+                "1. open": "162.8300",
+                "2. high": "196.9000",
+                "3. low": "157.8850",
+                "4. close": "183.6600",
+                "5. volume": "128121557"
+            }
+        }
+    }
+    return mock_data
 
 def get_response(thread_id, run_id):
     while True:
@@ -168,9 +204,7 @@ def get_response(thread_id, run_id):
     messages = client.beta.threads.messages.list(thread_id)
     for message in messages.data:
         if message.role == "assistant":
-            return message.content[0].text.value
-        else:
-            return "No assistant response found."
+            return message.content
     return None
 
 def view_steps(thread_id, run_id):
@@ -180,7 +214,7 @@ def view_steps(thread_id, run_id):
 
 
 def main():
-    prompt = "Retrieve and analyze latest 3 months data for the company IBM, consider identify any trends, calculate ratios, key metrics, etc. and show as a text summary."
+    prompt = "Retrieve and visualize latest 3 months data for the company IBM, consider identify any trends, calculate ratios, key metrics, etc. and show as a text summary."
     start_time = time.perf_counter()
     assistant_id = validate_assistant()
 
@@ -201,7 +235,15 @@ def main():
     assistant_response = get_response(thread_id, run_id)
     end_time = time.perf_counter()
     print(f"Done! Response received in {end_time - start_time:.2f} seconds")
-    print(f"Assistant Response: {assistant_response}")
+
+    for content in assistant_response:
+        if content.type == "image_file":
+            file_id = content.image_file.file_id
+            file_data = client.files.content(file_id)
+            with open("stock-image.png", "wb") as f:
+                f.write(file_data.read())
+        elif content.type == "text":
+            print(f"Assistant Response: {content.text.value}")
     view_steps(thread_id, run_id)
 
 if __name__ == "__main__":
