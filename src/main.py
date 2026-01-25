@@ -2,9 +2,8 @@ import json
 import os
 import time
 import warnings
-
-import dotenv
 import requests
+import dotenv
 from openai import OpenAI
 
 warnings.filterwarnings("ignore")
@@ -41,6 +40,9 @@ functions_list = [
                 "required": ["s"],
             },
         },
+    },
+    {
+        "type": "code_interpreter",
     }
 ]
 
@@ -72,7 +74,7 @@ print("Thread created with ID:", empty_thread.id)
 thread_message = client.beta.threads.messages.create(
     empty_thread.id,
     role="user",
-    content="Get me the latest stock data for AAPl and provide an analysis."
+    content="Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months."
 )
 run = client.beta.threads.runs.create(
     empty_thread.id,
@@ -98,17 +100,36 @@ while run.status in ("queued", "in_progress"):
         print(f"Tool call with ID and name: {tool_call.id} {function_name}")
         print(f"Done! Response received in {end_time - start_time:.2f} seconds.")
 
-
 run = client.beta.threads.runs.submit_tool_outputs_and_poll(
     thread_id=empty_thread.id,
     run_id=run.id,
     tool_outputs=tool_outputs
 )
-
+file_id = None
 if run.status == 'completed':
     messages = client.beta.threads.messages.list(
         thread_id=empty_thread.id
     )
-    print("Assistant response:", messages.data[0].content[0].text.value)
-else:
-    print(run.status)
+    print("Messages")
+    for message in messages.data:
+        for content in message.content:
+            if content.type == "text":
+                print("Assistant text response:", content.text.value)
+            elif content.type == "image_file":
+                file_id = content.image_file.file_id
+
+    print("Let's visualize this data to better understand the stock performance over the last 3 months.")
+    print("assistant", file_id)
+    run_steps = client.beta.threads.runs.steps.list(
+        thread_id=empty_thread.id,
+        run_id=run.id,
+    )
+    print("Run Steps:")
+    for step in run_steps.data:
+        print(f"Step: {step.id}")
+
+    image_data = client.files.content(file_id)
+    image_data_bytes = image_data.read()
+
+    with open("./stock-perormance.png", "wb") as file:
+        file.write(image_data_bytes)
