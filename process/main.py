@@ -6,6 +6,7 @@ from openai.pagination import SyncCursorPage
 from openai.types.beta import Thread
 from openai.types.beta.threads import Run, Message
 from datetime import datetime
+from assistants import assistants
 
 from config import Config
 import json
@@ -20,23 +21,6 @@ available_time_series = [
 ]
 
 client = OpenAI(api_key=Config.api_key, base_url=Config.base_url)
-
-def create_assistant(openai_client: OpenAI, tools: Optional[list] | None):
-    return openai_client.beta.assistants.create(
-        name=Config.assistant_name,
-        instructions=Config.assistant_instruction,
-        model=Config.assistant_model,
-        tools=tools,
-        tool_choice="auto"
-    )
-
-def get_assistant_when_exists(openai_client: OpenAI):
-    assi_list = openai_client.beta.assistants.list()
-    for assistant in assi_list:
-        if assistant.name == Config.assistant_name:
-            return assistant
-    return None
-
 
 functions_list = [
     {
@@ -80,7 +64,7 @@ def _expected_time_series_key(time_series: str) -> str:
 def retrieve_stock_data(stock_symbol: str, time_series: str, interval: str = None, use_cache: bool = False) -> Any:
     if use_cache:
         print("===> Using cached data for stock symbol:", stock_symbol)
-        with open("alphavantage_AAPL_daily.json", "r", encoding="utf-8") as f:
+        with open(f"alphavantage_AAPL_{time_series}.json", "r", encoding="utf-8") as f:
             return json.load(f)
 
     if time_series == "TIME_SERIES_INTRADAY" and not interval:
@@ -123,9 +107,8 @@ def retrieve_stock_data(stock_symbol: str, time_series: str, interval: str = Non
             raise RuntimeError(f"Unexpected response keys: {list(data.keys())}")
 
     # +++ for testing purposes only - save response to file +++
-    # optional: Zeitstempel im Dateinamen
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    filename = f"alphavantage_{stock_symbol}_daily_{timestamp}.json"
+    filename = f"alphavantage_{stock_symbol}_{time_series}_{timestamp}.json"
 
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
@@ -151,7 +134,7 @@ def _parse_tool_args(call) -> dict:
 def handle_requires_action(openai_client:OpenAI, run: Run) -> Run:
     tool_calls = run.required_action.submit_tool_outputs.tool_calls
     tool_outputs = []
-
+    print(f"required_action: {run.required_action.type}")
     for call in tool_calls:
         args = json.loads(call.function.arguments)
 
@@ -180,17 +163,19 @@ def handle_requires_action(openai_client:OpenAI, run: Run) -> Run:
                     "output": json.dumps(result)
                 })
             except Exception as e:
+                print(f"Error running retrieve_stock_data: {e}")
                 tool_outputs.append({
                     "tool_call_id": call.id,
                     "output": json.dumps({"error": str(e)})
                 })
 
         else:
+            print(f"Unknown tool: {call.function.name}")
             tool_outputs.append({
                 "tool_call_id": call.id,
                 "output": json.dumps({"error": f"Unknown tool: {call.function.name}"})
             })
-
+    # for every iteration, the output will be added to submit_tool_outputs to the same thread
     run = openai_client.beta.threads.runs.submit_tool_outputs(
         thread_id=run.thread_id,
         run_id=run.id,
@@ -202,20 +187,8 @@ def handle_requires_action(openai_client:OpenAI, run: Run) -> Run:
 # program flow
 def execute(openai_client: OpenAI):
     start = time.perf_counter()
-    assi = get_assistant_when_exists(openai_client)
-    assistant: openai_client.types.beta.assistant.Assistant
-    if assi:
-        assistant = assi
-        print(
-            f"Matching `{assistant.name}` assistant found, "
-            f"using the first matching assistant with ID: {assistant.id}"
-        )
-    else:
-        assistant = create_assistant(openai_client, functions_list)
-        print(
-            f"No matching `{assistant.name}` assistant found, "
-            f"creating a new assistant with ID: {assistant.id}"
-        )
+
+    assistant = assistants.create_assistant(openai_client, functions_list)
 
     # create thread for conversation
     thread = openai_client.beta.threads.create()
@@ -225,8 +198,8 @@ def execute(openai_client: OpenAI):
     openai_client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
-        # content="Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months."
-        content="Retrieve AAPL monthly time series for the latest 3 months. Use Python with matplotlib to create a chart of closing prices. Save the plot as 'stock-image.png' and attach the image file to the assistant response. Do not return a markdown image reference."
+        content="Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months."
+        # content="Retrieve AAPL monthly time series for the latest 3 months. Use Python with matplotlib to create a chart of closing prices. Save the plot as 'stock-image.png' and attach the image file to the assistant response. Do not return a markdown image reference."
     )
     # print(f"Message added to thread: {message.id}")
 
@@ -248,16 +221,7 @@ def execute(openai_client: OpenAI):
     start_response = time.perf_counter()
 
     # Wait for the run to complete
-    while run.status in {"queued", "in_progress", "requires_action"}:
-        time.sleep(1)
-        run = openai_client.beta.threads.runs.retrieve(
-            thread_id=thread.id,
-            run_id=run.id
-        )
-
-        if run.status == "requires_action": #todo required_action -> submit_tool_outputs not handled
-            run = handle_requires_action(openai_client, run)
-            continue
+    run = continuous_status_monitoring(openai_client, run, thread)
 
     elapsed_response = time.perf_counter() - start_response
     print(f"Done! Response received in {elapsed_response:.2f} seconds.")
@@ -272,12 +236,12 @@ def execute(openai_client: OpenAI):
     # is image there?
     # status = run.status
     # print(f"Run status: {status}") ==> is completed
-    image_id = check_for_image(messages)
+    image_id = check_for_image_and_return_id(messages)
     if image_id:
         # image_data = openai_client.beta.files.retrieve_content(file_id=image_id)
         image_data = openai_client.files.content(image_id)
         image_data_bytes = image_data.read()
-        with open("./stock-image.png", "wb") as f:
+        with open("./images/stock-image.png", "wb") as f:
             f.write(image_data_bytes)
 
     # Display the assistant's response
@@ -289,13 +253,28 @@ def execute(openai_client: OpenAI):
     print_run_steps(openai_client, run, thread)
 
 
-def check_for_image(messages: SyncCursorPage[Message]) -> str | None:
+def continuous_status_monitoring(openai_client: OpenAI, run: Run, thread: Thread) -> Run:
+    while run.status in {"queued", "in_progress", "requires_action"}:
+        time.sleep(1)
+        run = openai_client.beta.threads.runs.retrieve(
+            thread_id=thread.id,
+            run_id=run.id
+        )
+
+        if run.status == "requires_action":
+            run = handle_requires_action(openai_client, run)
+            continue
+
+    return run
+
+
+def check_for_image_and_return_id(messages: SyncCursorPage[Message]) -> str | None:
     for msg in messages.data:
         if msg.role == "assistant":
             for item in msg.content:
                 if item.type == "image_file":
                     image_file_id = item.image_file.file_id
-                    print("Bild erzeugt(assistant):", image_file_id)
+                    print("Image created(assistant):", image_file_id)
                     return image_file_id
     return None
 
