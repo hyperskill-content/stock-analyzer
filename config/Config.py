@@ -14,5 +14,6 @@ assistant_model = "gpt-4o-mini"
 
 alphavantage_key = os.environ.get("ALPHAVANTAGE_API_KEY", None)
 
-user_prompt = "Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months."
+# user_prompt = "Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months."
+user_prompt = "Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 12 months. Show Open, High, Low, Close prices and Volume in separate subplots with proper formatting."
 

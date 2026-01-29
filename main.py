@@ -199,7 +199,8 @@ def execute(openai_client: OpenAI):
         thread_id=thread.id,
         role="user",
         content="Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months."
-        # content="Retrieve AAPL monthly time series for the latest 3 months. Use Python with matplotlib to create a chart of closing prices. Save the plot as 'stock-image.png' and attach the image file to the assistant response. Do not return a markdown image reference."
+        # content="Retrieve AAPL monthly time series for the latest 3 months. Use Python with matplotlib to create a chart of closing prices. Save the plot as 'stock-image
+        # .png' and attach the image file to the assistant response. Do not return a markdown image reference."
     )
     # print(f"Message added to thread: {message.id}")
 
@@ -232,22 +233,23 @@ def execute(openai_client: OpenAI):
     messages = openai_client.beta.threads.messages.list(
         thread_id=thread.id
     )
+
     # at this stage, the image should be available
     # is image there?
     # status = run.status
     # print(f"Run status: {status}") ==> is completed
     image_id = check_for_image_and_return_id(messages)
     if image_id:
-        # image_data = openai_client.beta.files.retrieve_content(file_id=image_id)
         image_data = openai_client.files.content(image_id)
         image_data_bytes = image_data.read()
-        with open("./images/stock-image.png", "wb") as f:
+        with open("images/stock-image.png", "wb") as f:
             f.write(image_data_bytes)
 
-    # Display the assistant's response
-    for message in messages.data:
-        if message.role == "assistant":
-            print(f"Assistant response: {message.content[0].text.value}")
+    ##  Display the assistant's response
+    # for message in messages.data:
+    #     if message.role == "assistant":
+    #         print(f"Assistant response: {message.content[0].text.value}")
+    # ==> causes exception: AttributeError: 'ImageFileContentBlock' object has no attribute 'text'
 
 
     print_run_steps(openai_client, run, thread)
@@ -274,7 +276,7 @@ def check_for_image_and_return_id(messages: SyncCursorPage[Message]) -> str | No
             for item in msg.content:
                 if item.type == "image_file":
                     image_file_id = item.image_file.file_id
-                    print("Image created(assistant):", image_file_id)
+                    # print("Image created(assistant):", image_file_id)
                     return image_file_id
     return None
 

@@ -7,22 +7,24 @@ def create_assistant(openai_client: OpenAI, tools: Optional[list] | None):
     assi = find_assistant_by_name(openai_client)
     assistant: openai_client.types.beta.assistant.Assistant
     if assi:
-        assistant = assi
-        print(
-            f"Matching `{assistant.name}` assistant found, "
-            f"using the first matching assistant with ID: {assistant.id}"
-        )
-    else:
-        assistant = openai_client.beta.assistants.create(
-            name=Config.assistant_name,
-            instructions=Config.assistant_instruction,
-            model=Config.assistant_model,
-            tools=tools
-        )
-        print(
-            f"No matching `{assistant.name}` assistant found, "
-            f"creating a new assistant with ID: {assistant.id}"
-        )
+        # assistant = assi
+        # print(
+        #     f"Matching `{assistant.name}` assistant found, "
+        #     f"using the first matching assistant with ID: {assistant.id}"
+        # )
+        delete_assistant(openai_client, assi.id)
+
+    # else:
+    assistant = openai_client.beta.assistants.create(
+        name=Config.assistant_name,
+        instructions=Config.assistant_instruction,
+        model=Config.assistant_model,
+        tools=tools
+    )
+    print(
+        f"No matching `{assistant.name}` assistant found, "
+        f"creating a new assistant with ID: {assistant.id}"
+    )
     return assistant
 
 
