@@ -8,16 +8,44 @@ import warnings
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 load_dotenv()
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 ASSISTANT_NAME = "stock_analyzer_assistant2"
-API_KEY_ALPHAVANTAGE = os.environ.get("ALPHAVANTAGE_API_KEY")
 URL_ALPHAVANTAGE = "https://www.alphavantage.co/query"
+
+try:
+    client = OpenAI(api_key = os.environ['OPENAI_API_KEY'])
+    API_KEY_ALPHAVANTAGE = os.environ['ALPHAVANTAGE_API_KEY']
+except KeyError as e:
+    print(f"Error: Environment variable {e} not found!")
 
 def validate_assistant():
     assistants = client.beta.assistants.list()
     for assistant in assistants.data:
         if assistant.name == ASSISTANT_NAME:
             return assistant.id
+    return None
+
+def upload_file(file_path, purpose):
+    existing_id = validate_existing_file_id("sample_visual.jpg")
+    if existing_id:
+        print(f"File found! ID: {existing_id}")
+    else:
+        with open(file_path, "rb") as file:
+            uploaded_file = client.files.create(
+                file=file,
+                purpose=purpose
+            )
+            existing_id = uploaded_file.id
+    return existing_id
+
+
+def validate_existing_file_id(target_filename, purpose="vision"):
+    # List all files for your project
+    files = client.files.list()
+
+    # Iterate through the list to find a match
+    for file in files.data:
+        if file.filename == target_filename and file.purpose == purpose:
+            return file.id
     return None
 
 def create_assistant():
@@ -75,12 +103,21 @@ def create_assistant():
     )
     return assistant.id
 
-def create_thread_message(message_content):
+def create_thread_message(message_content, file_id=None):
     thread = client.beta.threads.create()
     client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
-        content=message_content,
+        content=[
+            {
+                "type": "text",
+                "text": message_content
+            },
+            {
+                "type": "image_file",
+                "image_file": {"file_id": file_id}
+            }
+        ],
     )
     return thread.id
 
@@ -102,7 +139,7 @@ def get_company_symbol(keyword):
     if "bestMatches" in data and len(data["bestMatches"]) > 0:
         return data["bestMatches"][0]["1. symbol"]
     else:
-        return "IBM"  # Default to IBM if no match found
+        raise ValueError("Company symbol not found for the given keyword.")
 
 def get_frequency_function(keyword):
     frequency_map = {
@@ -121,11 +158,12 @@ def get_stock_data(company_symbol, frequency_function):
     }
     response = requests.get(URL_ALPHAVANTAGE, params=params)
     data = response.json()
-    if 'Information' in data:
-        data = get_stock_info(company_symbol)
-    return data
+    if "Meta Data" in data:
+        return data #data = get_mock_stock(company_symbol) Test with mock data
+    else:
+        raise ValueError("Stock data not found for the given symbol and frequency function.")
 
-def get_stock_info(stock_symbol):
+def get_mock_stock(stock_symbol):
     mock_data = {
         "Meta Data": {
             "1. Information": "Monthly Prices (open, high, low, close) and Volumes",
@@ -212,9 +250,10 @@ def view_steps(thread_id, run_id):
     for step in steps.data:
         print(f"Step ID: {step.id}")
 
-
 def main():
-    prompt = "Retrieve and visualize latest 3 months data for the company IBM, consider identify any trends, calculate ratios, key metrics, etc. and show as a text summary."
+    prompt = '''1. Retrieve the IBM stock’s monthly price data (e.g., open, high, low, close, and volume) for the latest three months.
+                2. Show the retrieved data clearly as formatted text for each month.
+                3. Create a visualization inspired by the provided reference image'''
     start_time = time.perf_counter()
     assistant_id = validate_assistant()
 
@@ -224,7 +263,8 @@ def main():
         assistant_id = create_assistant()
         print(f"Matching `{ASSISTANT_NAME}` assistant found, using the first matching assistant with ID: {assistant_id}")
 
-    thread_id = create_thread_message(prompt)
+    file_id = upload_file("images/sample_visual.jpg", purpose="vision")
+    thread_id = create_thread_message(prompt, file_id)
     print(f"Thread created with ID: {thread_id}")
 
     run_id = run_thread(assistant_id,thread_id)
