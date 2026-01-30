@@ -157,7 +157,7 @@ def handle_requires_action(openai_client:OpenAI, run: Run) -> Run:
                 continue
 
             try:
-                result = retrieve_stock_data(stock_symbol, time_series, interval, use_cache=True)
+                result = retrieve_stock_data(stock_symbol, time_series, interval, use_cache=False)
                 tool_outputs.append({
                     "tool_call_id": call.id,
                     "output": json.dumps(result)
@@ -188,6 +188,12 @@ def handle_requires_action(openai_client:OpenAI, run: Run) -> Run:
 def execute(openai_client: OpenAI):
     start = time.perf_counter()
 
+    # Delete old assistant to ensure new instructions are used
+    old_assistant = assistants.find_assistant_by_name(openai_client)
+    if old_assistant:
+        print(f"Deleting old assistant: {old_assistant.id}")
+        assistants.delete_assistant(openai_client, old_assistant.id)
+
     assistant = assistants.create_assistant(openai_client, functions_list)
 
     # create thread for conversation
@@ -198,9 +204,10 @@ def execute(openai_client: OpenAI):
     openai_client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
-        content="Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months."
-        # content="Retrieve AAPL monthly time series for the latest 3 months. Use Python with matplotlib to create a chart of closing prices. Save the plot as 'stock-image
-        # .png' and attach the image file to the assistant response. Do not return a markdown image reference."
+        content="Retrieve and visualize the monthly time series data for the stock symbol 'AAPL' for the latest 3 months. " +
+                "Please include all the data provided from the tools used like stock high low close volume and open data in your response. " +
+                "Plot a line graph containing the prices highs, lows and averages. In the same image, add a separate bar graph below, and plot the volume traded. " +
+                "Visualize it in an image."
     )
     # print(f"Message added to thread: {message.id}")
 
@@ -234,22 +241,22 @@ def execute(openai_client: OpenAI):
         thread_id=thread.id
     )
 
-    # at this stage, the image should be available
-    # is image there?
-    # status = run.status
-    # print(f"Run status: {status}") ==> is completed
-    image_id = check_for_image_and_return_id(messages)
-    if image_id:
-        image_data = openai_client.files.content(image_id)
-        image_data_bytes = image_data.read()
-        with open("images/stock-image.png", "wb") as f:
-            f.write(image_data_bytes)
+    # Display the assistant's response and save any images
+    print("\n=== Assistant Response ===")
+    for message in messages.data:
+        for content in message.content:
+            if content.type == 'text':
+                print(f"Assistant response: {content.text.value}")
+            elif content.type == 'image_file':
+                file_id = content.image_file.file_id
+                print(f"Assistant: {file_id}")
 
-    ##  Display the assistant's response
-    # for message in messages.data:
-    #     if message.role == "assistant":
-    #         print(f"Assistant response: {message.content[0].text.value}")
-    # ==> causes exception: AttributeError: 'ImageFileContentBlock' object has no attribute 'text'
+                # Download and save image
+                image_data = openai_client.files.content(file_id)
+                image_data_bytes = image_data.read()
+                with open("stock-image.png", "wb") as f:
+                    f.write(image_data_bytes)
+                print(f"Image saved to: stock-image.png")
 
 
     print_run_steps(openai_client, run, thread)
@@ -270,15 +277,15 @@ def continuous_status_monitoring(openai_client: OpenAI, run: Run, thread: Thread
     return run
 
 
-def check_for_image_and_return_id(messages: SyncCursorPage[Message]) -> str | None:
-    for msg in messages.data:
-        if msg.role == "assistant":
-            for item in msg.content:
-                if item.type == "image_file":
-                    image_file_id = item.image_file.file_id
-                    # print("Image created(assistant):", image_file_id)
-                    return image_file_id
-    return None
+# def check_for_image_and_return_id(messages: SyncCursorPage[Message]) -> str | None:
+#     for msg in messages.data:
+#         if msg.role == "assistant":
+#             for item in msg.content:
+#                 if item.type == "image_file":
+#                     image_file_id = item.image_file.file_id
+#                     # print("Image created(assistant):", image_file_id)
+#                     return image_file_id
+#     return None
 
 
 def print_run_steps(openai_client: OpenAI, run: Run, thread: Thread):
@@ -286,10 +293,28 @@ def print_run_steps(openai_client: OpenAI, run: Run, thread: Thread):
         thread_id=thread.id,
         run_id=run.id
     )
-    print()
+    print("\n=== Run Steps ===")
     for step in run_steps.data:
-        print(f"Step: {step.id}")
-        # print(json.dumps(step.model_dump(), indent=2))
+        print(f"Step: {step.id}, Type: {step.type}, Status: {step.status}")
+
+        # Check if this step has code_interpreter outputs with files
+        if step.type == "tool_calls" and step.step_details.tool_calls:
+            for tool_call in step.step_details.tool_calls:
+                if tool_call.type == "code_interpreter":
+                    print(f"  Code Interpreter outputs: {len(tool_call.code_interpreter.outputs)}")
+                    for output in tool_call.code_interpreter.outputs:
+                        print(f"    Output type: {output.type}")
+                        if output.type == "image":
+                            file_id = output.image.file_id
+                            print(f"    Found image file_id: {file_id}")
+                            # Download and save it!
+                            try:
+                                file_contents = openai_client.files.content(file_id=file_id)
+                                with open(file="stock-image.png", mode="wb") as image_file:
+                                    image_file.write(file_contents.read())
+                                    print(f"    ✓ Image saved to: {image_file.name}")
+                            except Exception as e:
+                                print(f"    ✗ Error saving image: {e}")
 
 
 # start
