@@ -4,13 +4,13 @@ from openai import OpenAI
 from openai.types.beta.assistant import Assistant
 
 
-class AssistantProps(TypedDict):
+class AssistantArgs(TypedDict):
     name: str
     instructions: str
     model: str
 
 
-def get_or_create_assistant(client: OpenAI, props: AssistantProps) -> Assistant:
+def get_or_create_assistant(client: OpenAI, props: AssistantArgs) -> Assistant:
     assistant = None
     assistant_name = props["name"]
     assistant_instructions = props["instructions"]
