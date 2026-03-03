@@ -1,14 +1,18 @@
 import os
+import time
+
 from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from utils.helpers import AssistantArgs, get_or_create_assistant, delete_assistants
+from utils.helpers import AssistantArgs, get_or_create_assistant
 
+print('::::::::::::::')
 print('::: TASK 1 :::')
+print('::::::::::::::')
 
 # 1. Set up the Assistant
-
+# print('\n::: Step 1 :::')
 load_dotenv()
 
 api_key = os.environ.get('OPENAI_API_KEY')
@@ -23,22 +27,24 @@ assistant_params: AssistantArgs = {
   'instructions': ASSISTANT_INSTRUCTIONS,
   'model': ASSISTANT_MODEL,
 }
-
 # 2. Validate Assistance existence
+# print('\n::: Step 2 :::')
 assistant = get_or_create_assistant(client, assistant_params)
-
+print(f'---> Assistant retrieved or created: {assistant.id}')
 # 3. Create a Thread object
+# print('\n::: Step 3 :::')
 thread = client.beta.threads.create()
-
+print(f'---> Thread created with ID: {thread.id}')
 # 4. Send a message to the Thread
+# print('\n::: Step 4 :::')
 initial_thread_role = 'user'
 initial_thread_content = 'Tell me your name and instructions. YOU MUST Provide a DIRECT and SHORT response.'
-client.beta.threads.messages.create(
+message = client.beta.threads.messages.create(
   thread_id=thread.id,
   role=initial_thread_role,
   content=initial_thread_content
 )
-
+print(f'---> Message added to thread: {message.id}')
 # 5. Execute a Run instance
 # print('\n::: Step 5 :::')
 run = client.beta.threads.runs.create(
