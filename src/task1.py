@@ -40,3 +40,22 @@ client.beta.threads.messages.create(
 )
 
 # 5. Execute a Run instance
+# print('\n::: Step 5 :::')
+run = client.beta.threads.runs.create(
+  thread_id=thread.id,
+  assistant_id=assistant.id
+)
+print(f'---> Run created with ID: {run.id}')
+while run.status == 'in_progress' or run.status=='queued':
+  time.sleep(1)
+  run = client.beta.threads.runs.retrieve(
+    thread_id=thread.id,
+    run_id=run.id
+  )
+  print(f'---> Run status: {run.status}')
+messages = client.beta.threads.messages.list(
+  thread_id=thread.id
+)
+for msg in messages.data:
+  if msg.role == 'assistant':
+    print(f'---> Assistant Message: {msg.content[0].text.value}')
