@@ -28,5 +28,6 @@ assistant_params: AssistantArgs = {
 assistant = get_or_create_assistant(client, assistant_params)
 
 # 3. Create a Thread object
+thread = client.beta.threads.create()
 # 4. Send a message to the Thread
 # 5. Execute a Run instance
