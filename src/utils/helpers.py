@@ -19,12 +19,18 @@ def get_or_create_assistant(client: OpenAI, props: AssistantArgs) -> Assistant:
     for asst in current_assistants:
         if asst.name == assistant_name:
             assistant = asst
+            print(
+                f"Matching `{assistant_name}` assistant found, using the first matching assistant with ID: {asst.id}"
+            )
             break
     if not assistant:
         assistant = client.beta.assistants.create(
             name=assistant_name,
             instructions=assistant_instructions,
             model=assistant_model,
+        )
+        print(
+            f"No matching `{assistant_name}` assistant found, creating a new assistant with ID: {asst.id}"
         )
     return assistant
 
