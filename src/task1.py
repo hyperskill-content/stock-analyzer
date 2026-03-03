@@ -29,5 +29,14 @@ assistant = get_or_create_assistant(client, assistant_params)
 
 # 3. Create a Thread object
 thread = client.beta.threads.create()
+
 # 4. Send a message to the Thread
+initial_thread_role = 'user'
+initial_thread_content = 'Tell me your name and instructions. YOU MUST Provide a DIRECT and SHORT response.'
+client.beta.threads.messages.create(
+  thread_id=thread.id,
+  role=initial_thread_role,
+  content=initial_thread_content
+)
+
 # 5. Execute a Run instance
