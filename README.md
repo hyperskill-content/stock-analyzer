@@ -1,5 +1,7 @@
 # The Stock Analyzer
 
+> **Archive Notice:** This repository uses OpenAI's Assistants API, which has been deprecated. This project is now archived and no longer maintained.
+
 ## **Introduction**
 With this project, you will utilize the OpenAI API to develop a specialized assistant for analyzing and visualizing stock market data, use the OpenAI client to implement knowledge retrieval, code interpretation, and function calling functionalities within the assistant, and implement prompt engineering strategies to direct the assistant in processing stock data and creating visual plots.
 
